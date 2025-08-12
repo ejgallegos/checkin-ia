@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Bot, Clock, Sparkles, MessagesSquare } from "lucide-react";
 
 const benefits = [
@@ -32,14 +32,18 @@ export function BenefitsSection() {
           <h2 className="text-3xl md:text-4xl font-bold">Ventajas de usar Checkin IA</h2>
           <p className="text-lg text-muted-foreground mt-2">Descubre cómo podemos potenciar tu negocio.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {benefits.map((benefit, index) => (
-            <Card key={index} className="text-center flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardHeader>
-                {benefit.icon}
-                <CardTitle className="mt-4">{benefit.title}</CardTitle>
-              </CardHeader>
-              <CardDescription>{benefit.description}</CardDescription>
+            <Card key={index} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-6 flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  {benefit.icon}
+                </div>
+                <div className="flex-grow">
+                  <CardTitle>{benefit.title}</CardTitle>
+                  <CardDescription className="mt-2">{benefit.description}</CardDescription>
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
