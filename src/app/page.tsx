@@ -1,6 +1,6 @@
-
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
+import { HeroSection } from '@/components/sections/hero';
 import { BenefitsSection } from "@/components/sections/benefits";
 import { TestimonialsSection } from "@/components/sections/testimonials";
 import { FaqSection } from "@/components/sections/faq";
@@ -22,6 +22,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
+        <HeroSection />
         <>
           {ALL_SECTIONS.map((sectionKey) => (
             <section

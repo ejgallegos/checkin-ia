@@ -21,17 +21,6 @@ export function Header() {
           </Button>
         </div>
       </div>
-       <div className="container max-w-7xl py-12 text-center flex flex-col items-center">
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4">
-          Automatiza tu atención y aumenta tus reservas
-        </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground mb-8">
-          Checkin IA es la plataforma que se encarga de las consultas y reservas por WhatsApp, para que vos te dediques a brindar la mejor experiencia.
-        </p>
-        <Button size="lg" asChild>
-          <a href="#contact">Pedir más información</a>
-        </Button>
-      </div>
     </header>
   );
 }
