@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="bg-background">
-       <div className="container max-w-7xl py-12 md:py-24 text-center flex flex-col items-center">
+    <section className="w-full bg-background">
+      <div className="container max-w-7xl mx-auto py-12 md:py-24 text-center flex flex-col items-center">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 animate-fade-in">
           Automatiza tu atención y aumenta tus reservas
         </h1>
