@@ -51,7 +51,6 @@ export function PageClient() {
         entries.forEach((entry) => {
           const id = entry.target.id;
           if (entry.isIntersecting) {
-            entry.target.classList.remove("section-hidden");
             entry.target.classList.add("section-visible");
             if (!navigationHistory.current.includes(id)) {
               navigationHistory.current.push(id);
@@ -69,7 +68,11 @@ export function PageClient() {
       if (el) observer.observe(el);
     });
 
-    return () => observer.disconnect();
+    return () => {
+      Object.values(sectionRefs.current).forEach((el) => {
+        if (el) observer.unobserve(el);
+      });
+    }
   }, [prioritizeContent, sectionsOrder]);
 
   if (loading) {
@@ -89,7 +92,7 @@ export function PageClient() {
           id={sectionKey}
           key={sectionKey}
           ref={(el) => (sectionRefs.current[sectionKey] = el)}
-          className="section-hidden"
+          className="section-hidden animate-fade-in"
         >
           {sectionComponents[sectionKey]}
         </section>
