@@ -47,8 +47,8 @@ export function ContactSection() {
   }
 
   return (
-    <div className="py-12 md:py-24 bg-secondary">
-      <div className="container max-w-7xl">
+    <div className="w-full py-12 md:py-24 bg-secondary">
+      <div className="container max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-4">
               <h2 className="text-3xl md:text-4xl font-bold">¿Listo para empezar?</h2>
