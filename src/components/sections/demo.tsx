@@ -56,7 +56,7 @@ export function DemoSection() {
   async function onInfoSubmit(values: AccommodationFormValues) {
     setIsLoading(true);
     try {
-      const response = await fetch('https://n8n.gali.com.ar/webhook-test/837f8987-d294-447a-b265-8938f70c3111', {
+      const response = await fetch('https://n8n.gali.com.ar/webhook/837f8987-d294-447a-b265-8938f70c3111', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
