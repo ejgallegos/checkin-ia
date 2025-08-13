@@ -53,12 +53,36 @@ export function DemoSection() {
     },
   });
 
-  function onInfoSubmit(values: AccommodationFormValues) {
-    setAccommodationInfo(values);
-    toast({
-      title: "¡Información guardada!",
-      description: "Ahora puedes empezar a chatear con tu asistente de IA.",
-    });
+  async function onInfoSubmit(values: AccommodationFormValues) {
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://n8n.gali.com.ar/webhook-test/e1165639-b544-42f1-baa9-846b42bc682c', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al enviar al webhook');
+      }
+
+      setAccommodationInfo(values);
+      toast({
+        title: "¡Información guardada!",
+        description: "Ahora puedes empezar a chatear con tu asistente de IA.",
+      });
+    } catch (error) {
+      console.error("Error al enviar el formulario:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la información. Por favor, inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const handleChatSubmit = async (e: React.FormEvent) => {
@@ -117,7 +141,7 @@ export function DemoSection() {
                       <FormItem>
                         <FormLabel>Nombre del Alojamiento</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: Cabañas del Bosque" {...field} />
+                          <Input placeholder="Ej: Cabañas del Bosque" {...field} disabled={isLoading}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -130,7 +154,7 @@ export function DemoSection() {
                       <FormItem>
                         <FormLabel>Descripción</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} />
+                          <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -143,7 +167,7 @@ export function DemoSection() {
                       <FormItem>
                         <FormLabel>Servicios y Comodidades</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: Wifi, Pileta, Parrilla, Desayuno incluido" {...field} />
+                          <Input placeholder="Ej: Wifi, Pileta, Parrilla, Desayuno incluido" {...field} disabled={isLoading}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -156,13 +180,15 @@ export function DemoSection() {
                       <FormItem>
                         <FormLabel>Ubicación</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} />
+                          <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} disabled={isLoading}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full" size="lg">Guardar y Activar IA</Button>
+                  <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                    {isLoading ? <Loader className="animate-spin" /> : 'Guardar y Activar IA'}
+                  </Button>
                 </form>
               </Form>
             </CardContent>
@@ -191,7 +217,7 @@ export function DemoSection() {
                        {msg.role === 'user' && <Avatar className="bg-secondary-foreground text-secondary"><User /></Avatar>}
                     </div>
                   ))}
-                   {isLoading && (
+                   {isLoading && chatHistory[chatHistory.length -1]?.role === 'user' && (
                     <div className="flex items-start gap-3 justify-start">
                        <Avatar className="bg-primary text-primary-foreground"><Bot /></Avatar>
                       <div className="rounded-lg px-4 py-2 bg-muted flex items-center gap-2">
@@ -228,3 +254,5 @@ function Avatar({ children, className }: { children: React.ReactNode, className?
     </div>
   )
 }
+
+    
