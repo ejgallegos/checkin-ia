@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 
 const formSchema = z.object({
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
+  denominacion: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
   description: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   amenities: z.string().min(5, "Menciona al menos un servicio."),
   location: z.string().min(3, "La ubicación es requerida."),
@@ -46,7 +46,7 @@ export function DemoSection() {
   const form = useForm<AccommodationFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      denominacion: "",
       description: "",
       amenities: "",
       location: "",
@@ -67,8 +67,15 @@ export function DemoSection() {
       if (!response.ok) {
         throw new Error('Error al enviar al webhook');
       }
+      
+      const infoForAI: AccommodationInfo = {
+        name: values.denominacion,
+        description: values.description,
+        amenities: values.amenities,
+        location: values.location,
+      };
 
-      setAccommodationInfo(values);
+      setAccommodationInfo(infoForAI);
       toast({
         title: "¡Información guardada!",
         description: "Ahora puedes empezar a chatear con tu asistente de IA.",
@@ -136,7 +143,7 @@ export function DemoSection() {
                 <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="denominacion"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nombre del Alojamiento</FormLabel>
