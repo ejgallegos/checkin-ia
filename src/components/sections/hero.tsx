@@ -12,7 +12,7 @@ export function HeroSection() {
         </p>
         <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
           <Button size="lg" asChild>
-            <a href="#contact">Pedir más información</a>
+            <a href="#demo">Genera tu Demo</a>
           </Button>
         </div>
       </div>
