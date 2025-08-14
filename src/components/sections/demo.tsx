@@ -145,17 +145,71 @@ export function DemoSection() {
         },
       });
 
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          throw new Error(`Error del servidor: ${response.statusText}`);
+        }
+        throw new Error(errorData.message || 'Error en la respuesta del servidor.');
+      }
+
       const data = await response.json();
 
-      if (response.ok && data && data.base64) {
+      if (data && data.base64) {
         setQrCodeUrl(data.base64);
         toast({
           title: "¡QR Generado!",
           description: "Escanea el código con tu app de WhatsApp para conectar.",
         });
+
+        // Set webhook after QR is shown
+        try {
+            const webhookPayload = {
+                webhook: {
+                    enabled: true,
+                    url: "https://n8n.gali.com.ar/webhook/4cf2663e-d777-42a1-8557-8c418a451156",
+                    events: ["MESSAGES_UPSERT"],
+                    base64: false,
+                    byEvents: false
+                }
+            };
+            
+            const webhookResponse = await fetch(`https://evolution.gali.com.ar/webhook/set/${encodedDenominacion}`, {
+                method: 'POST',
+                headers: {
+                    'apikey': 'evolution_api_69976825',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(webhookPayload)
+            });
+
+            if (!webhookResponse.ok) {
+                let errorWebhookData;
+                try {
+                    errorWebhookData = await webhookResponse.json();
+                } catch (e) {
+                    throw new Error(`Error del servidor al configurar webhook: ${webhookResponse.statusText}`);
+                }
+                throw new Error(errorWebhookData.message || 'Error al configurar el webhook.');
+            }
+            
+            toast({
+                title: "¡Webhook Configurado!",
+                description: "La conexión con WhatsApp está lista para recibir mensajes.",
+            });
+
+        } catch (webhookError) {
+             toast({
+                title: "Error de Webhook",
+                description: (webhookError as Error).message,
+                variant: "destructive",
+            });
+        }
+        
       } else {
-        // Lanza un error con el mensaje de la API si existe, o uno genérico.
-        throw new Error(data.message || "La respuesta de la API no contiene un código QR válido.");
+        throw new Error("La respuesta de la API no contiene un código QR válido.");
       }
 
     } catch (error) {
