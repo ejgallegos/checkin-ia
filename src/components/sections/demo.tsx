@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { useState } from "react";
 import { accommodationChat, AccommodationChatInput, AccommodationInfo } from "@/ai/flows/accommodation-chat-flow";
-import { Bot, Home, Info, Loader, Send, User } from "lucide-react";
+import { Bot, Home, Info, Loader, Send, User, QrCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
@@ -49,6 +49,7 @@ export function DemoSection() {
   const [userQuery, setUserQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<AccommodationFormValues>({
@@ -137,6 +138,7 @@ export function DemoSection() {
   const handleGenerateQR = async () => {
     if (!formValues) return;
     setIsGeneratingQR(true);
+    setQrCodeUrl(null);
     try {
       const encodedDenominacion = encodeURIComponent(formValues.denominacion);
       const response = await fetch(`https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`, {
@@ -154,15 +156,19 @@ export function DemoSection() {
 
       const data = await response.json();
       
-      // Aquí puedes manejar la respuesta, por ejemplo, mostrar el QR
-      console.log("Respuesta de la API de QR:", data);
-      toast({
-        title: "¡Conexión iniciada!",
-        description: "Revisa la consola para ver la respuesta o implementa la visualización del QR.",
-      });
+      if (data?.qrcode?.base64) {
+        setQrCodeUrl(`data:image/png;base64,${data.qrcode.base64}`);
+        toast({
+          title: "¡QR Generado!",
+          description: "Escanea el código con tu app de WhatsApp para conectar.",
+        });
+      } else {
+        throw new Error("La respuesta de la API no contiene un código QR válido.");
+      }
 
     } catch (error) {
       console.error("Error al generar QR:", error);
+      setQrCodeUrl(null);
       toast({
         title: "Error de Conexión",
         description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
@@ -213,9 +219,18 @@ export function DemoSection() {
                       <p><strong>Teléfono:</strong> {formValues.telefono}</p>
                     </div>
                   </div>
-                   <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
-                     {isGeneratingQR ? <Loader className="animate-spin" /> : 'Generar QA de Conexión'}
-                   </Button>
+                   {!qrCodeUrl && (
+                    <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
+                      {isGeneratingQR ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
+                    </Button>
+                   )}
+                   {qrCodeUrl && (
+                     <div className="mt-6 text-center flex flex-col items-center">
+                       <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
+                       <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
+                       <img src={qrCodeUrl} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
+                     </div>
+                   )}
                 </CardContent>
               </>
             ) : (
@@ -412,3 +427,5 @@ function Avatar({ children, className }: { children: React.ReactNode, className?
     </div>
   )
 }
+
+    
