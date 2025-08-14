@@ -106,11 +106,12 @@ export function DemoSection() {
         },
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
-          throw new Error(data.message || `Error del servidor: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || 'Error en la respuesta del servidor.');
       }
+      
+      const data = await response.json();
       
       if (data && data.base64) {
         setQrCodeUrl(data.base64);
@@ -138,9 +139,9 @@ export function DemoSection() {
                 },
                 body: JSON.stringify(webhookPayload)
             });
-            const webhookData = await webhookResponse.json();
             if (!webhookResponse.ok) {
-                throw new Error(webhookData.message || 'Error al configurar el webhook.');
+                const webhookErrorData = await webhookResponse.json().catch(() => ({ message: webhookResponse.statusText }));
+                throw new Error(webhookErrorData.message || 'Error al configurar el webhook.');
             }
             
             toast({
@@ -176,7 +177,7 @@ export function DemoSection() {
 
   return (
     <div className="w-full py-12 md:py-24 bg-secondary">
-      <div className="container max-w-4xl mx-auto">
+      <div className="container max-w-2xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">Genera tu Demo de IA</h2>
           <p className="text-lg text-muted-foreground mt-2">
@@ -213,9 +214,6 @@ export function DemoSection() {
                       <p><strong>Teléfono:</strong> {formValues.telefono}</p>
                     </div>
                   </div>
-                  <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
-                    {isGeneratingQR ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
-                  </Button>
                    {qrCodeUrl && (
                      <div className="mt-6 text-center flex flex-col items-center">
                        <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
@@ -223,6 +221,9 @@ export function DemoSection() {
                        <img src={qrCodeUrl} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
                      </div>
                    )}
+                   <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
+                    {isGeneratingQR ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
+                  </Button>
                 </CardContent>
               </>
             ) : (
