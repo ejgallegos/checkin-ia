@@ -82,7 +82,7 @@ export function DemoSection() {
       const infoForAI: AccommodationInfo = {
         name: values.denominacion,
         description: values.descripcion,
-        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}.`, // Combino info relevante aquí.
+        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Teléfono: ${values.telefono}, Email: ${values.email}`,
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}, Email: ${values.email}`
       };
@@ -149,12 +149,12 @@ export function DemoSection() {
         },
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error desconocido al conectar.' }));
+        const errorData = data;
         throw new Error(errorData.message || 'Error en la respuesta del servidor.');
       }
-
-      const data = await response.json();
       
       if (data?.qrcode?.base64) {
         setQrCodeUrl(`data:image/png;base64,${data.qrcode.base64}`);
@@ -427,5 +427,3 @@ function Avatar({ children, className }: { children: React.ReactNode, className?
     </div>
   )
 }
-
-    
