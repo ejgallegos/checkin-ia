@@ -20,13 +20,19 @@ import { useState } from "react";
 import { accommodationChat, AccommodationChatInput, AccommodationInfo } from "@/ai/flows/accommodation-chat-flow";
 import { Bot, Loader, Send, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 
 const formSchema = z.object({
   denominacion: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
-  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
-  amenities: z.string().min(5, "Menciona al menos un servicio."),
-  location: z.string().min(3, "La ubicación es requerida."),
+  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
+  telefono: z.string().min(8, "Ingresa un teléfono válido."),
+  email: z.string().email("Ingresa un email válido."),
+  capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
+  tipoAlojamiento: z.enum(["departamento", "cabaña", "casa"], {
+    required_error: "Debes seleccionar un tipo de alojamiento."
+  }),
+  ubicacion: z.string().min(3, "La ubicación es requerida."),
 });
 
 type AccommodationFormValues = z.infer<typeof formSchema>;
@@ -47,9 +53,11 @@ export function DemoSection() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       denominacion: "",
-      description: "",
-      amenities: "",
-      location: "",
+      descripcion: "",
+      telefono: "",
+      email: "",
+      capacidad: 1,
+      ubicacion: "",
     },
   });
 
@@ -70,9 +78,10 @@ export function DemoSection() {
       
       const infoForAI: AccommodationInfo = {
         name: values.denominacion,
-        description: values.description,
-        amenities: values.amenities,
-        location: values.location,
+        description: values.descripcion,
+        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}.`, // Combino info relevante aquí.
+        location: values.ubicacion,
+        contact: `Teléfono: ${values.telefono}, Email: ${values.email}`
       };
 
       setAccommodationInfo(infoForAI);
@@ -140,7 +149,7 @@ export function DemoSection() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="denominacion"
@@ -156,7 +165,7 @@ export function DemoSection() {
                   />
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="descripcion"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Descripción</FormLabel>
@@ -169,12 +178,12 @@ export function DemoSection() {
                   />
                    <FormField
                     control={form.control}
-                    name="amenities"
+                    name="telefono"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Servicios y Comodidades</FormLabel>
+                        <FormLabel>Teléfono de Contacto</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: Wifi, Pileta, Parrilla, Desayuno incluido" {...field} disabled={isLoading}/>
+                          <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -182,7 +191,70 @@ export function DemoSection() {
                   />
                    <FormField
                     control={form.control}
-                    name="location"
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email de Contacto</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Ej: contacto@alojamiento.com" {...field} disabled={isLoading}/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="capacidad"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Capacidad de Personas</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tipoAlojamiento"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Tipo de Alojamiento</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                            disabled={isLoading}
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="departamento" />
+                              </FormControl>
+                              <FormLabel className="font-normal">Departamento</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="cabaña" />
+                              </FormControl>
+                              <FormLabel className="font-normal">Cabaña</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="casa" />
+                              </FormControl>
+                              <FormLabel className="font-normal">Casa</FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="ubicacion"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ubicación</FormLabel>

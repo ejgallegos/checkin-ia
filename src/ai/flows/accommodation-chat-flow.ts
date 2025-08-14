@@ -15,6 +15,7 @@ const AccommodationInfoSchema = z.object({
   description: z.string().describe('Una descripción detallada del alojamiento.'),
   amenities: z.string().describe('Una lista de servicios y comodidades que ofrece.'),
   location: z.string().describe('La ubicación del alojamiento.'),
+  contact: z.string().describe('La información de contacto (teléfono, email).'),
 });
 export type AccommodationInfo = z.infer<typeof AccommodationInfoSchema>;
 
@@ -37,13 +38,14 @@ const prompt = ai.definePrompt({
   output: { schema: z.string() },
   prompt: `Eres un asistente de inteligencia artificial para un alojamiento turístico. Tu objetivo es responder las preguntas de los potenciales huéspedes de manera amable, clara y concisa, utilizando únicamente la información proporcionada sobre el alojamiento.
 
-NUNCA inventes información que no se te ha dado (como precios, disponibilidad, políticas específicas, etc.). Si no sabes la respuesta a una pregunta, responde amablemente que no tienes esa información y que deben consultar directamente.
+NUNCA inventes información que no se te ha dado (como precios, disponibilidad, políticas específicas no mencionadas, etc.). Si no sabes la respuesta a una pregunta, responde amablemente que no tienes esa información y que deben consultar directamente.
 
 Aquí está la información del alojamiento:
 - Nombre: {{{accommodationInfo.name}}}
 - Descripción: {{{accommodationInfo.description}}}
-- Servicios: {{{accommodationInfo.amenities}}}
+- Características y Servicios: {{{accommodationInfo.amenities}}}
 - Ubicación: {{{accommodationInfo.location}}}
+- Contacto: {{{accommodationInfo.contact}}}
 
 A continuación se presenta el historial de la conversación. La última línea es la pregunta actual del usuario que debes responder.
 
@@ -64,3 +66,5 @@ const accommodationChatFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
