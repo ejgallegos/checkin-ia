@@ -17,11 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { useState } from "react";
-import { accommodationChat, AccommodationChatInput, AccommodationInfo } from "@/ai/flows/accommodation-chat-flow";
-import { Bot, Home, Info, Loader, Send, User, QrCode } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { AccommodationInfo } from "@/ai/flows/accommodation-chat-flow";
+import { Loader, QrCode } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-
 
 const formSchema = z.object({
   denominacion: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
@@ -37,16 +35,9 @@ const formSchema = z.object({
 
 type AccommodationFormValues = z.infer<typeof formSchema>;
 
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
 export function DemoSection() {
   const [accommodationInfo, setAccommodationInfo] = useState<AccommodationInfo | null>(null);
   const [formValues, setFormValues] = useState<AccommodationFormValues | null>(null);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [userQuery, setUserQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -87,7 +78,7 @@ export function DemoSection() {
       setAccommodationInfo(infoForAI);
       toast({
         title: "¡Información guardada!",
-        description: "Ahora puedes empezar a chatear con tu asistente de IA.",
+        description: "Ahora puedes generar el QR de conexión.",
       });
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
@@ -101,36 +92,6 @@ export function DemoSection() {
     }
   }
 
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userQuery.trim() || !accommodationInfo) return;
-
-    const newUserMessage: ChatMessage = { role: 'user', content: userQuery };
-    setChatHistory(prev => [...prev, newUserMessage]);
-    setUserQuery("");
-    setIsLoading(true);
-
-    try {
-      const chatInput: AccommodationChatInput = {
-        accommodationInfo,
-        chatHistory: chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n'),
-        query: userQuery,
-      };
-      const response = await accommodationChat(chatInput);
-      const newAssistantMessage: ChatMessage = { role: 'assistant', content: response };
-      setChatHistory(prev => [...prev, newAssistantMessage]);
-    } catch (error) {
-      console.error("Error calling AI flow:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo obtener una respuesta de la IA. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
   const handleGenerateQR = async () => {
     if (!formValues) return;
     setIsGeneratingQR(true);
@@ -145,17 +106,11 @@ export function DemoSection() {
         },
       });
 
-      if (!response.ok) {
-          let errorData;
-          try {
-              errorData = await response.json();
-          } catch (e) {
-              throw new Error(`Error del servidor: ${response.statusText}`);
-          }
-          throw new Error(errorData.message || 'Error en la respuesta del servidor.');
-      }
-
       const data = await response.json();
+      
+      if (!response.ok) {
+          throw new Error(data.message || `Error del servidor: ${response.statusText}`);
+      }
       
       if (data && data.base64) {
         setQrCodeUrl(data.base64);
@@ -183,15 +138,9 @@ export function DemoSection() {
                 },
                 body: JSON.stringify(webhookPayload)
             });
-
+            const webhookData = await webhookResponse.json();
             if (!webhookResponse.ok) {
-                let errorWebhookData;
-                try {
-                    errorWebhookData = await webhookResponse.json();
-                } catch (e) {
-                    throw new Error(`Error del servidor al configurar webhook: ${webhookResponse.statusText}`);
-                }
-                throw new Error(errorWebhookData.message || 'Error al configurar el webhook.');
+                throw new Error(webhookData.message || 'Error al configurar el webhook.');
             }
             
             toast({
@@ -227,15 +176,15 @@ export function DemoSection() {
 
   return (
     <div className="w-full py-12 md:py-24 bg-secondary">
-      <div className="container max-w-7xl mx-auto">
+      <div className="container max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">Genera tu Demo de IA</h2>
           <p className="text-lg text-muted-foreground mt-2">
             Ingresa los datos de tu alojamiento y prueba cómo respondería tu asistente virtual.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          <Card className="shadow-2xl">
+        <div className="flex justify-center">
+          <Card className="shadow-2xl w-full">
             {accommodationInfo && formValues ? (
                <>
                 <CardHeader>
@@ -409,64 +358,8 @@ export function DemoSection() {
             </>
             )}
           </Card>
-          
-          <Card className={cn("shadow-2xl", !accommodationInfo && "opacity-50 pointer-events-none")}>
-            <CardHeader>
-              <CardTitle>2. Chatea con tu Asistente</CardTitle>
-              <CardDescription>Haz una consulta como si fueras un turista.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-96 bg-background rounded-lg border p-4 flex flex-col">
-                <div className="flex-grow space-y-4 overflow-y-auto pr-2">
-                  {chatHistory.length === 0 && (
-                    <div className="text-center text-muted-foreground pt-16">
-                      <p>El historial de chat está vacío.</p>
-                      <p>¡Haz tu primera pregunta!</p>
-                    </div>
-                  )}
-                  {chatHistory.map((msg, index) => (
-                    <div key={index} className={cn("flex items-start gap-3", msg.role === 'user' ? "justify-end" : "justify-start")}>
-                      {msg.role === 'assistant' && <Avatar className="bg-primary text-primary-foreground"><Bot /></Avatar>}
-                      <div className={cn("rounded-lg px-4 py-2 max-w-xs", msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                        <p className="text-sm">{msg.content}</p>
-                      </div>
-                       {msg.role === 'user' && <Avatar className="bg-secondary-foreground text-secondary"><User /></Avatar>}
-                    </div>
-                  ))}
-                   {isLoading && chatHistory[chatHistory.length -1]?.role === 'user' && (
-                    <div className="flex items-start gap-3 justify-start">
-                       <Avatar className="bg-primary text-primary-foreground"><Bot /></Avatar>
-                      <div className="rounded-lg px-4 py-2 bg-muted flex items-center gap-2">
-                        <Loader className="w-4 h-4 animate-spin" />
-                        <p className="text-sm">Pensando...</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <form onSubmit={handleChatSubmit} className="mt-4 flex items-center gap-2">
-                  <Input 
-                    value={userQuery}
-                    onChange={(e) => setUserQuery(e.target.value)}
-                    placeholder="Ej: ¿Aceptan mascotas?"
-                    disabled={!accommodationInfo || isLoading}
-                  />
-                  <Button type="submit" size="icon" disabled={!accommodationInfo || isLoading}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
   );
-}
-
-function Avatar({ children, className }: { children: React.ReactNode, className?: string }) {
-  return (
-    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0", className)}>
-      {children}
-    </div>
-  )
 }
