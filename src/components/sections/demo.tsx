@@ -67,17 +67,13 @@ export function DemoSection() {
   async function onInfoSubmit(values: AccommodationFormValues) {
     setIsLoading(true);
     try {
-      const response = await fetch('https://n8n.gali.com.ar/webhook/837f8987-d294-447a-b265-8938f70c3111', {
+      await fetch('https://n8n.gali.com.ar/webhook/837f8987-d294-447a-b265-8938f70c3111', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(values),
       });
-
-      if (!response.ok) {
-        throw new Error('Error al enviar al webhook');
-      }
       
       const infoForAI: AccommodationInfo = {
         name: values.denominacion,
@@ -150,20 +146,12 @@ export function DemoSection() {
       });
 
       const responseText = await response.text();
-      
-      if (!response.ok) {
-        let errorMessage = 'Error en la respuesta del servidor.';
-        try {
-          const errorJson = JSON.parse(responseText);
-          errorMessage = errorJson.message || responseText;
-        } catch (e) {
-           errorMessage = responseText;
-        }
-        throw new Error(errorMessage);
-      }
-      
       const data = JSON.parse(responseText);
 
+      if (!response.ok) {
+        throw new Error(data.message || 'Error en la respuesta del servidor.');
+      }
+      
       if (Array.isArray(data) && data.length > 0 && data[0].base64) {
         setQrCodeUrl(data[0].base64);
         toast({
