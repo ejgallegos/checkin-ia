@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { useState } from "react";
 import { accommodationChat, AccommodationChatInput, AccommodationInfo } from "@/ai/flows/accommodation-chat-flow";
-import { Bot, Loader, Send, User } from "lucide-react";
+import { Bot, Home, Info, Loader, Send, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
@@ -44,6 +44,7 @@ interface ChatMessage {
 
 export function DemoSection() {
   const [accommodationInfo, setAccommodationInfo] = useState<AccommodationInfo | null>(null);
+  const [formValues, setFormValues] = useState<AccommodationFormValues | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [userQuery, setUserQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +84,8 @@ export function DemoSection() {
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}, Email: ${values.email}`
       };
-
+      
+      setFormValues(values);
       setAccommodationInfo(infoForAI);
       toast({
         title: "¡Información guardada!",
@@ -143,134 +145,169 @@ export function DemoSection() {
         </div>
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <Card className="shadow-2xl">
-            <CardHeader>
-              <CardTitle>1. Configura tu Alojamiento</CardTitle>
-              <CardDescription>Completa los detalles para entrenar a tu asistente.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="denominacion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre del Alojamiento</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: Cabañas del Bosque" {...field} disabled={isLoading}/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="descripcion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descripción</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name="telefono"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono de Contacto</FormLabel>
-                        <FormControl>
-                          <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email de Contacto</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Ej: contacto@alojamiento.com" {...field} disabled={isLoading}/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name="capacidad"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Capacidad de Personas</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="tipoAlojamiento"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>Tipo de Alojamiento</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                            disabled={isLoading}
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="departamento" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Departamento</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="cabaña" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Cabaña</FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="casa" />
-                              </FormControl>
-                              <FormLabel className="font-normal">Casa</FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name="ubicacion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ubicación</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} disabled={isLoading}/>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                    {isLoading ? <Loader className="animate-spin" /> : 'Guardar y Activar IA'}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
+            {accommodationInfo && formValues ? (
+               <>
+                <CardHeader>
+                  <CardTitle>Información del Alojamiento</CardTitle>
+                  <CardDescription>Estos son los datos que usará la IA para responder.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">{formValues.denominacion}</h3>
+                    <p className="text-sm text-muted-foreground">{formValues.descripcion}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <p><strong>Tipo:</strong> {formValues.tipoAlojamiento}</p>
+                    </div>
+                     <div className="flex items-center gap-2">
+                      <p><strong>Capacidad:</strong> {formValues.capacidad} personas</p>
+                    </div>
+                     <div className="flex items-center gap-2">
+                      <p><strong>Ubicación:</strong> {formValues.ubicacion}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p><strong>Email:</strong> {formValues.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p><strong>Teléfono:</strong> {formValues.telefono}</p>
+                    </div>
+                  </div>
+                   <Button className="w-full mt-4" size="lg">Generar QA de Conexión</Button>
+                </CardContent>
+              </>
+            ) : (
+            <>
+              <CardHeader>
+                <CardTitle>1. Configura tu Alojamiento</CardTitle>
+                <CardDescription>Completa los detalles para entrenar a tu asistente.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="denominacion"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre del Alojamiento</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Cabañas del Bosque" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="descripcion"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Descripción</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="telefono"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono de Contacto</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email de Contacto</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="Ej: contacto@alojamiento.com" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="capacidad"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Capacidad de Personas</FormLabel>
+                          <FormControl>
+                            <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="tipoAlojamiento"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Tipo de Alojamiento</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1"
+                              disabled={isLoading}
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="departamento" />
+                                </FormControl>
+                                <FormLabel className="font-normal">Departamento</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="cabaña" />
+                                </FormControl>
+                                <FormLabel className="font-normal">Cabaña</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="casa" />
+                                </FormControl>
+                                <FormLabel className="font-normal">Casa</FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="ubicacion"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ubicación</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                      {isLoading ? <Loader className="animate-spin" /> : 'Guardar y Activar IA'}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </>
+            )}
           </Card>
           
           <Card className={cn("shadow-2xl", !accommodationInfo && "opacity-50 pointer-events-none")}>
@@ -333,5 +370,3 @@ function Avatar({ children, className }: { children: React.ReactNode, className?
     </div>
   )
 }
-
-    
