@@ -145,21 +145,17 @@ export function DemoSection() {
         },
       });
 
-      const responseText = await response.text();
-      const data = JSON.parse(responseText);
+      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en la respuesta del servidor.');
-      }
-      
-      if (Array.isArray(data) && data.length > 0 && data[0].base64) {
-        setQrCodeUrl(data[0].base64);
+      if (response.ok && data && data.base64) {
+        setQrCodeUrl(data.base64);
         toast({
           title: "¡QR Generado!",
           description: "Escanea el código con tu app de WhatsApp para conectar.",
         });
       } else {
-        throw new Error("La respuesta de la API no contiene un código QR válido.");
+        // Lanza un error con el mensaje de la API si existe, o uno genérico.
+        throw new Error(data.message || "La respuesta de la API no contiene un código QR válido.");
       }
 
     } catch (error) {
