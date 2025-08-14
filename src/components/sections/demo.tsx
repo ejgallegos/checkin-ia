@@ -150,12 +150,20 @@ export function DemoSection() {
       });
 
       const responseText = await response.text();
-      const data = JSON.parse(responseText);
-
+      
       if (!response.ok) {
-        throw new Error(data.message || responseText || 'Error en la respuesta del servidor.');
+        let errorMessage = 'Error en la respuesta del servidor.';
+        try {
+          const errorJson = JSON.parse(responseText);
+          errorMessage = errorJson.message || responseText;
+        } catch (e) {
+           errorMessage = responseText;
+        }
+        throw new Error(errorMessage);
       }
       
+      const data = JSON.parse(responseText);
+
       if (Array.isArray(data) && data.length > 0 && data[0].base64) {
         setQrCodeUrl(data[0].base64);
         toast({
@@ -169,15 +177,9 @@ export function DemoSection() {
     } catch (error) {
       console.error("Error al generar QR:", error);
       setQrCodeUrl(null);
-      let errorMessage = "No se pudo generar el QR. Inténtalo de nuevo.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
       toast({
         title: "Error de Conexión",
-        description: errorMessage,
+        description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
