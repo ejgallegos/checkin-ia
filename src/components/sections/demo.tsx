@@ -146,17 +146,17 @@ export function DemoSection() {
       });
 
       if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch (e) {
-          throw new Error(`Error del servidor: ${response.statusText}`);
-        }
-        throw new Error(errorData.message || 'Error en la respuesta del servidor.');
+          let errorData;
+          try {
+              errorData = await response.json();
+          } catch (e) {
+              throw new Error(`Error del servidor: ${response.statusText}`);
+          }
+          throw new Error(errorData.message || 'Error en la respuesta del servidor.');
       }
 
       const data = await response.json();
-
+      
       if (data && data.base64) {
         setQrCodeUrl(data.base64);
         toast({
@@ -164,7 +164,6 @@ export function DemoSection() {
           description: "Escanea el código con tu app de WhatsApp para conectar.",
         });
 
-        // Set webhook after QR is shown
         try {
             const webhookPayload = {
                 webhook: {
@@ -265,11 +264,9 @@ export function DemoSection() {
                       <p><strong>Teléfono:</strong> {formValues.telefono}</p>
                     </div>
                   </div>
-                   {!qrCodeUrl && (
-                    <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
-                      {isGeneratingQR ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
-                    </Button>
-                   )}
+                  <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
+                    {isGeneratingQR ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
+                  </Button>
                    {qrCodeUrl && (
                      <div className="mt-6 text-center flex flex-col items-center">
                        <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
