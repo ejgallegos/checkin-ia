@@ -48,6 +48,7 @@ export function DemoSection() {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [userQuery, setUserQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<AccommodationFormValues>({
@@ -132,6 +133,45 @@ export function DemoSection() {
       setIsLoading(false);
     }
   };
+  
+  const handleGenerateQR = async () => {
+    if (!formValues) return;
+    setIsGeneratingQR(true);
+    try {
+      const encodedDenominacion = encodeURIComponent(formValues.denominacion);
+      const response = await fetch(`https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`, {
+        method: 'GET',
+        headers: {
+          'apikey': 'evolution_api_69976825',
+          'accept': 'application/json, text/plain, */*',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido al conectar.' }));
+        throw new Error(errorData.message || 'Error en la respuesta del servidor.');
+      }
+
+      const data = await response.json();
+      
+      // Aquí puedes manejar la respuesta, por ejemplo, mostrar el QR
+      console.log("Respuesta de la API de QR:", data);
+      toast({
+        title: "¡Conexión iniciada!",
+        description: "Revisa la consola para ver la respuesta o implementa la visualización del QR.",
+      });
+
+    } catch (error) {
+      console.error("Error al generar QR:", error);
+      toast({
+        title: "Error de Conexión",
+        description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  };
 
 
   return (
@@ -173,7 +213,9 @@ export function DemoSection() {
                       <p><strong>Teléfono:</strong> {formValues.telefono}</p>
                     </div>
                   </div>
-                   <Button className="w-full mt-4" size="lg">Generar QA de Conexión</Button>
+                   <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
+                     {isGeneratingQR ? <Loader className="animate-spin" /> : 'Generar QA de Conexión'}
+                   </Button>
                 </CardContent>
               </>
             ) : (
