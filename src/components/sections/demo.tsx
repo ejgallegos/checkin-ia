@@ -82,7 +82,7 @@ export function DemoSection() {
       const infoForAI: AccommodationInfo = {
         name: values.denominacion,
         description: values.descripcion,
-        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Teléfono: ${values.telefono}, Email: ${values.email}`,
+        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}.`,
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}, Email: ${values.email}`
       };
@@ -156,8 +156,8 @@ export function DemoSection() {
         throw new Error(errorData.message || 'Error en la respuesta del servidor.');
       }
       
-      if (data?.qrcode?.base64) {
-        setQrCodeUrl(`data:image/png;base64,${data.qrcode.base64}`);
+      if (Array.isArray(data) && data.length > 0 && data[0].base64) {
+        setQrCodeUrl(data[0].base64);
         toast({
           title: "¡QR Generado!",
           description: "Escanea el código con tu app de WhatsApp para conectar.",
@@ -427,3 +427,5 @@ function Avatar({ children, className }: { children: React.ReactNode, className?
     </div>
   )
 }
+
+    
