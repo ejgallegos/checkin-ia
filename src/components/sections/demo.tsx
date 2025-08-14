@@ -82,7 +82,7 @@ export function DemoSection() {
       const infoForAI: AccommodationInfo = {
         name: values.denominacion,
         description: values.descripcion,
-        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}.`,
+        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Contacto: Teléfono ${values.telefono}, Email ${values.email}`,
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}, Email: ${values.email}`
       };

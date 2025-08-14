@@ -66,5 +66,3 @@ const accommodationChatFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    
