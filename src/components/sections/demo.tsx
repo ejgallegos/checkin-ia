@@ -427,5 +427,3 @@ function Avatar({ children, className }: { children: React.ReactNode, className?
     </div>
   )
 }
-
-    
