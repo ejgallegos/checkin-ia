@@ -17,29 +17,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { useState } from "react";
-import { Loader } from "lucide-react";
+import { Loader, ArrowLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from 'next/navigation';
+import { Progress } from "@/components/ui/progress";
 
 const formSchema = z.object({
+  // Step 3 fields
   nombre: z.string().min(2, "El nombre es requerido."),
   email: z.string().email("Ingresa un email válido."),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+  // Step 1 fields
   nombreAlojamiento: z.string().min(2, "El nombre del alojamiento debe tener al menos 2 caracteres."),
-  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
-  telefono: z.string().min(8, "Ingresa un teléfono válido."),
-  capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
   tipoAlojamiento: z.enum(["departamento", "cabaña", "casa"], {
     required_error: "Debes seleccionar un tipo de alojamiento."
   }),
+  capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
+  // Step 2 fields
+  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
+  telefono: z.string().min(8, "Ingresa un teléfono válido."),
   ubicacion: z.string().min(3, "La ubicación es requerida."),
 });
 
 type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
+const stepFields = {
+  1: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
+  2: ["descripcion", "telefono", "ubicacion"],
+  3: ["nombre", "email", "password"],
+};
+
 export function DemoSection() {
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState(1);
   const { toast } = useToast();
   const { login } = useAuth();
   const router = useRouter();
@@ -57,6 +68,19 @@ export function DemoSection() {
       ubicacion: "",
     },
   });
+
+  const handleNextStep = async () => {
+    const fieldsToValidate = stepFields[step as keyof typeof stepFields];
+    const isValid = await form.trigger(fieldsToValidate as any);
+    if (isValid) {
+      setStep(step + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setStep(step - 1);
+  };
+
 
   async function onInfoSubmit(values: UserAndAccommodationFormValues) {
     setIsLoading(true);
@@ -89,7 +113,19 @@ export function DemoSection() {
         owner: registerData.user.id, 
       };
 
-      // TODO: Guardar el alojamiento en la base de datos
+      const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/accommodations', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${registerData.jwt}`
+        },
+        body: JSON.stringify({ data: accommodationData })
+      });
+      
+      if (!createAccommodationResponse.ok) {
+          const errorData = await createAccommodationResponse.json();
+          throw new Error(errorData.error?.message || 'No se pudo crear el alojamiento.');
+      }
       
       login(registerData.jwt, registerData.user, [accommodationData]);
 
@@ -119,172 +155,208 @@ export function DemoSection() {
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">Crea tu Cuenta y Conecta tu WhatsApp</h2>
           <p className="text-lg text-muted-foreground mt-2">
-            Regístrate y configura tu primer alojamiento para comenzar a automatizar.
+            Sigue los pasos para registrarte y configurar tu primer alojamiento.
           </p>
         </div>
         <div className="flex justify-center">
           <Card className="shadow-2xl w-full">
-            <>
               <CardHeader>
-                <CardTitle>1. Regístrate y Configura tu Alojamiento</CardTitle>
-                <CardDescription>Completa los detalles para entrenar a tu asistente.</CardDescription>
+                <CardTitle>Paso {step} de 3</CardTitle>
+                 <CardDescription>
+                  {step === 1 && "Ingresa los datos principales de tu alojamiento."}
+                  {step === 2 && "Describe tu lugar y cómo contactarte."}
+                  {step === 3 && "Crea tu cuenta para gestionar todo desde tu panel."}
+                </CardDescription>
+                 <Progress value={(step / 3) * 100} className="mt-2" />
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-4">
-                    <h3 className="text-lg font-semibold border-b pb-2">Tus Datos</h3>
-                     <FormField
-                      control={form.control}
-                      name="nombre"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre Completo</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ej: Ana Pérez" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                  <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-6">
+                    
+                    {step === 1 && (
+                      <div className="animate-fade-in space-y-4">
+                         <FormField
+                          control={form.control}
+                          name="nombreAlojamiento"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nombre del Alojamiento</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Ej: Cabañas del Bosque" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={form.control}
+                          name="tipoAlojamiento"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel>Tipo de Alojamiento</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex flex-col space-y-1"
+                                  disabled={isLoading}
+                                >
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="departamento" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Departamento</FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="cabaña" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Cabaña</FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="casa" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Casa</FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={form.control}
+                          name="capacidad"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Capacidad de Personas</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                    
+                    {step === 2 && (
+                       <div className="animate-fade-in space-y-4">
+                         <FormField
+                          control={form.control}
+                          name="descripcion"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descripción</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="ubicacion"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Ubicación</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="telefono"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
+                              <FormControl>
+                                <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                       </div>
+                    )}
+
+                    {step === 3 && (
+                       <div className="animate-fade-in space-y-4">
+                         <FormField
+                          control={form.control}
+                          name="nombre"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nombre Completo</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Ej: Ana Pérez" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="tu@email.com" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Contraseña</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                       </div>
+                    )}
+
+                    <div className="flex justify-between pt-4">
+                      {step > 1 ? (
+                         <Button type="button" variant="outline" onClick={handlePrevStep} disabled={isLoading}>
+                           <ArrowLeft className="mr-2"/>
+                           Volver
+                         </Button>
+                      ) : <div />}
+
+                      {step < 3 && (
+                         <Button type="button" onClick={handleNextStep} disabled={isLoading}>
+                           Siguiente
+                         </Button>
                       )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="tu@email.com" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+
+                      {step === 3 && (
+                        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                          {isLoading ? <Loader className="animate-spin" /> : 'Registrar y Activar IA'}
+                        </Button>
                       )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contraseña</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <h3 className="text-lg font-semibold border-b pb-2 pt-4">Datos de tu Primer Alojamiento</h3>
-                    <FormField
-                      control={form.control}
-                      name="nombreAlojamiento"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre del Alojamiento</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ej: Cabañas del Bosque" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="descripcion"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Descripción</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="telefono"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
-                          <FormControl>
-                            <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="capacidad"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Capacidad de Personas</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="tipoAlojamiento"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Tipo de Alojamiento</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex flex-col space-y-1"
-                              disabled={isLoading}
-                            >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="departamento" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Departamento</FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="cabaña" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Cabaña</FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="casa" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Casa</FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="ubicacion"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ubicación</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                      {isLoading ? <Loader className="animate-spin" /> : 'Registrar y Activar IA'}
-                    </Button>
+                    </div>
                   </form>
                 </Form>
               </CardContent>
-            </>
           </Card>
         </div>
       </div>
     </div>
   );
 }
+
+    
