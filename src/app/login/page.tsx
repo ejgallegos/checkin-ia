@@ -46,36 +46,41 @@ export default function LoginPage() {
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
     try {
-      // Esta es una simulación. Reemplaza con tu endpoint de login real.
-      // Por ahora, solo verificaremos que los campos no estén vacíos
-      // y simularemos una respuesta exitosa.
-      if (values.email && values.password) {
-        // Simula una llamada a la API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      const loginResponse = await fetch('https://db.turismovillaunion.gob.ar/api/auth/local', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: values.email,
+          password: values.password,
+        }),
+      });
 
-        // Simula una respuesta de la API
-        const mockJwt = "fake-jwt-token";
-        const mockUser = { id: 1, username: "Usuario de Prueba", email: values.email };
-        const mockAccommodations = [
-            {
-                name: "Alojamiento de Prueba",
-                description: "Un lugar increíble para descansar",
-                amenities: "Capacidad para 4 personas. Tipo: cabaña. Contacto: Teléfono 12345678",
-                location: "Villa La Angostura",
-                contact: "Teléfono: 12345678"
-            }
-        ];
-        
-        login(mockJwt, mockUser, mockAccommodations);
+      const loginData = await loginResponse.json();
 
-        toast({
-          title: "¡Inicio de Sesión Exitoso!",
-          description: "Serás redirigido a tu panel.",
-        });
-
-      } else {
-        throw new Error("El email y la contraseña son requeridos.");
+      if (!loginResponse.ok) {
+        throw new Error(loginData.error?.message || 'Credenciales inválidas.');
       }
+
+      const { jwt, user } = loginData;
+
+      // Asumiendo que hay un endpoint para obtener alojamientos por usuario
+      const accommodationsResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/accommodations?filters[owner][id][$eq]=${user.id}`, {
+          headers: {
+              'Authorization': `Bearer ${jwt}`
+          }
+      });
+      const accommodationsData = await accommodationsResponse.json();
+      
+      const accommodations = accommodationsData.data.map((item: any) => item.attributes);
+
+      login(jwt, user, accommodations);
+
+      toast({
+        title: "¡Inicio de Sesión Exitoso!",
+        description: "Serás redirigido a tu panel.",
+      });
 
     } catch (error) {
       toast({
