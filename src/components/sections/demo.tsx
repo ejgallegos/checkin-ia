@@ -62,8 +62,23 @@ export function DemoSection() {
   async function onInfoSubmit(values: UserAndAccommodationFormValues) {
     setIsLoading(true);
     try {
-      // Simulamos el registro y guardado de datos
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const registerResponse = await fetch('https://db.turismovillaunion.gob.ar/api/auth/local/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: values.nombre,
+          email: values.email,
+          password: values.password,
+        }),
+      });
+
+      if (!registerResponse.ok) {
+        const errorData = await registerResponse.json();
+        const errorMessage = errorData.error?.message || 'Error en el registro. Inténtalo de nuevo.';
+        throw new Error(errorMessage);
+      }
       
       const infoForAI: AccommodationInfo = {
         name: values.nombreAlojamiento,
@@ -83,7 +98,7 @@ export function DemoSection() {
       console.error("Error al enviar el formulario:", error);
       toast({
         title: "Error de Registro",
-        description: "No se pudo completar el registro. Por favor, inténtalo de nuevo.",
+        description: (error as Error).message,
         variant: "destructive",
       });
     } finally {
@@ -396,5 +411,3 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
