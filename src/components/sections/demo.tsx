@@ -22,10 +22,12 @@ import { Loader, QrCode } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 const formSchema = z.object({
-  denominacion: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
+  nombre: z.string().min(2, "El nombre es requerido."),
+  email: z.string().email("Ingresa un email válido."),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+  nombreAlojamiento: z.string().min(2, "El nombre del alojamiento debe tener al menos 2 caracteres."),
   descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   telefono: z.string().min(8, "Ingresa un teléfono válido."),
-  email: z.string().email("Ingresa un email válido."),
   capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
   tipoAlojamiento: z.enum(["departamento", "cabaña", "casa"], {
     required_error: "Debes seleccionar un tipo de alojamiento."
@@ -33,58 +35,55 @@ const formSchema = z.object({
   ubicacion: z.string().min(3, "La ubicación es requerida."),
 });
 
-type AccommodationFormValues = z.infer<typeof formSchema>;
+type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 export function DemoSection() {
   const [accommodationInfo, setAccommodationInfo] = useState<AccommodationInfo | null>(null);
-  const [formValues, setFormValues] = useState<AccommodationFormValues | null>(null);
+  const [formValues, setFormValues] = useState<UserAndAccommodationFormValues | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const form = useForm<AccommodationFormValues>({
+  const form = useForm<UserAndAccommodationFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      denominacion: "",
+      nombre: "",
+      email: "",
+      password: "",
+      nombreAlojamiento: "",
       descripcion: "",
       telefono: "",
-      email: "",
       capacidad: 1,
       ubicacion: "",
     },
   });
 
-  async function onInfoSubmit(values: AccommodationFormValues) {
+  async function onInfoSubmit(values: UserAndAccommodationFormValues) {
     setIsLoading(true);
     try {
-      await fetch('https://n8n.gali.com.ar/webhook/837f8987-d294-447a-b265-8938f70c3111', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
+      // Simulamos el registro y guardado de datos
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const infoForAI: AccommodationInfo = {
-        name: values.denominacion,
+        name: values.nombreAlojamiento,
         description: values.descripcion,
-        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Contacto: Teléfono ${values.telefono}, Email ${values.email}`,
+        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Contacto: Teléfono ${values.telefono}`,
         location: values.ubicacion,
-        contact: `Teléfono: ${values.telefono}, Email: ${values.email}`
+        contact: `Teléfono: ${values.telefono}`
       };
       
       setFormValues(values);
       setAccommodationInfo(infoForAI);
       toast({
-        title: "¡Información guardada!",
-        description: "Ahora puedes generar el QR de conexión.",
+        title: "¡Registro Exitoso!",
+        description: "Tu cuenta y tu primer alojamiento han sido creados.",
       });
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
       toast({
-        title: "Error",
-        description: "No se pudo guardar la información. Por favor, inténtalo de nuevo.",
+        title: "Error de Registro",
+        description: "No se pudo completar el registro. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -97,7 +96,7 @@ export function DemoSection() {
     setIsGeneratingQR(true);
     setQrCodeUrl(null);
     try {
-      const encodedDenominacion = encodeURIComponent(formValues.denominacion);
+      const encodedDenominacion = encodeURIComponent(formValues.nombreAlojamiento);
       const response = await fetch(`https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`, {
         method: 'GET',
         headers: {
@@ -106,13 +105,21 @@ export function DemoSection() {
         },
       });
 
+      const responseBody = await response.text();
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || 'Error en la respuesta del servidor.');
+        let errorMessage = `Error del servidor: ${response.status}`;
+        try {
+            const errorJson = JSON.parse(responseBody);
+            errorMessage = errorJson.message || JSON.stringify(errorJson);
+        } catch (e) {
+            errorMessage = responseBody || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       
-      const data = await response.json();
-      
+      const data = JSON.parse(responseBody);
+
       if (data && data.base64) {
         setQrCodeUrl(data.base64);
         toast({
@@ -179,9 +186,9 @@ export function DemoSection() {
     <div className="w-full py-12 md:py-24 bg-secondary">
       <div className="container max-w-2xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold">Genera tu Demo de IA</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">Crea tu Cuenta y Conecta tu WhatsApp</h2>
           <p className="text-lg text-muted-foreground mt-2">
-            Ingresa los datos de tu alojamiento y prueba cómo respondería tu asistente virtual.
+            Regístrate y configura tu primer alojamiento para comenzar a automatizar.
           </p>
         </div>
         <div className="flex justify-center">
@@ -189,12 +196,12 @@ export function DemoSection() {
             {accommodationInfo && formValues ? (
                <>
                 <CardHeader>
-                  <CardTitle>Información del Alojamiento</CardTitle>
-                  <CardDescription>Estos son los datos que usará la IA para responder.</CardDescription>
+                  <CardTitle>¡Bienvenido, {formValues.nombre}!</CardTitle>
+                  <CardDescription>Conecta tu WhatsApp para activar la IA en "{formValues.nombreAlojamiento}".</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">{formValues.denominacion}</h3>
+                    <h3 className="font-semibold text-lg">{formValues.nombreAlojamiento}</h3>
                     <p className="text-sm text-muted-foreground">{formValues.descripcion}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -206,9 +213,6 @@ export function DemoSection() {
                     </div>
                      <div className="flex items-center gap-2">
                       <p><strong>Ubicación:</strong> {formValues.ubicacion}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <p><strong>Email:</strong> {formValues.email}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <p><strong>Teléfono:</strong> {formValues.telefono}</p>
@@ -229,15 +233,56 @@ export function DemoSection() {
             ) : (
             <>
               <CardHeader>
-                <CardTitle>1. Configura tu Alojamiento</CardTitle>
+                <CardTitle>1. Regístrate y Configura tu Alojamiento</CardTitle>
                 <CardDescription>Completa los detalles para entrenar a tu asistente.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b pb-2">Tus Datos</h3>
+                     <FormField
+                      control={form.control}
+                      name="nombre"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre Completo</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Ana Pérez" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
-                      name="denominacion"
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="tu@email.com" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contraseña</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} disabled={isLoading}/>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <h3 className="text-lg font-semibold border-b pb-2 pt-4">Datos de tu Alojamiento</h3>
+                    <FormField
+                      control={form.control}
+                      name="nombreAlojamiento"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Nombre del Alojamiento</FormLabel>
@@ -266,22 +311,9 @@ export function DemoSection() {
                       name="telefono"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Teléfono de Contacto</FormLabel>
+                          <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
                           <FormControl>
                             <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email de Contacto</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="Ej: contacto@alojamiento.com" {...field} disabled={isLoading}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -351,7 +383,7 @@ export function DemoSection() {
                       )}
                     />
                     <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                      {isLoading ? <Loader className="animate-spin" /> : 'Guardar y Activar IA'}
+                      {isLoading ? <Loader className="animate-spin" /> : 'Registrar y Activar IA'}
                     </Button>
                   </form>
                 </Form>
@@ -364,3 +396,5 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
