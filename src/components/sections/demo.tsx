@@ -17,9 +17,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { useState } from "react";
-import { AccommodationInfo } from "@/ai/flows/accommodation-chat-flow";
-import { Loader, QrCode } from "lucide-react";
+import { Loader } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   nombre: z.string().min(2, "El nombre es requerido."),
@@ -38,12 +39,10 @@ const formSchema = z.object({
 type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 export function DemoSection() {
-  const [accommodationInfo, setAccommodationInfo] = useState<AccommodationInfo | null>(null);
-  const [formValues, setFormValues] = useState<UserAndAccommodationFormValues | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const { login } = useAuth();
+  const router = useRouter();
 
   const form = useForm<UserAndAccommodationFormValues>({
     resolver: zodResolver(formSchema),
@@ -74,26 +73,33 @@ export function DemoSection() {
         }),
       });
 
+      const registerData = await registerResponse.json();
+
       if (!registerResponse.ok) {
-        const errorData = await registerResponse.json();
-        const errorMessage = errorData.error?.message || 'Error en el registro. Inténtalo de nuevo.';
+        const errorMessage = registerData.error?.message || 'Error en el registro. Inténtalo de nuevo.';
         throw new Error(errorMessage);
       }
       
-      const infoForAI: AccommodationInfo = {
+      const accommodationData = {
         name: values.nombreAlojamiento,
         description: values.descripcion,
         amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Contacto: Teléfono ${values.telefono}`,
         location: values.ubicacion,
-        contact: `Teléfono: ${values.telefono}`
+        contact: `Teléfono: ${values.telefono}`,
+        owner: registerData.user.id, 
       };
+
+      // TODO: Guardar el alojamiento en la base de datos
       
-      setFormValues(values);
-      setAccommodationInfo(infoForAI);
+      login(registerData.jwt, registerData.user, [accommodationData]);
+
       toast({
         title: "¡Registro Exitoso!",
-        description: "Tu cuenta y tu primer alojamiento han sido creados.",
+        description: "Tu cuenta ha sido creada. Serás redirigido a tu panel.",
       });
+
+      router.push('/dashboard');
+
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
       toast({
@@ -105,96 +111,6 @@ export function DemoSection() {
       setIsLoading(false);
     }
   }
-
-  const handleGenerateQR = async () => {
-    if (!formValues) return;
-    setIsGeneratingQR(true);
-    setQrCodeUrl(null);
-    try {
-      const encodedDenominacion = encodeURIComponent(formValues.nombreAlojamiento);
-      const response = await fetch(`https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`, {
-        method: 'GET',
-        headers: {
-          'apikey': 'evolution_api_69976825',
-          'accept': 'application/json, text/plain, */*',
-        },
-      });
-
-      const responseBody = await response.text();
-      
-      if (!response.ok) {
-        let errorMessage = `Error del servidor: ${response.status}`;
-        try {
-            const errorJson = JSON.parse(responseBody);
-            errorMessage = errorJson.message || JSON.stringify(errorJson);
-        } catch (e) {
-            errorMessage = responseBody || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
-      
-      const data = JSON.parse(responseBody);
-
-      if (data && data.base64) {
-        setQrCodeUrl(data.base64);
-        toast({
-          title: "¡QR Generado!",
-          description: "Escanea el código con tu app de WhatsApp para conectar.",
-        });
-
-        try {
-            const webhookPayload = {
-                webhook: {
-                    enabled: true,
-                    url: "https://n8n.gali.com.ar/webhook/4cf2663e-d777-42a1-8557-8c418a451156",
-                    events: ["MESSAGES_UPSERT"],
-                    base64: false,
-                    byEvents: false
-                }
-            };
-            
-            const webhookResponse = await fetch(`https://evolution.gali.com.ar/webhook/set/${encodedDenominacion}`, {
-                method: 'POST',
-                headers: {
-                    'apikey': 'evolution_api_69976825',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(webhookPayload)
-            });
-            if (!webhookResponse.ok) {
-                const webhookErrorData = await webhookResponse.json().catch(() => ({ message: webhookResponse.statusText }));
-                throw new Error(webhookErrorData.message || 'Error al configurar el webhook.');
-            }
-            
-            toast({
-                title: "¡Webhook Configurado!",
-                description: "La conexión con WhatsApp está lista para recibir mensajes.",
-            });
-
-        } catch (webhookError) {
-             toast({
-                title: "Error de Webhook",
-                description: (webhookError as Error).message,
-                variant: "destructive",
-            });
-        }
-        
-      } else {
-        throw new Error("La respuesta de la API no contiene un código QR válido.");
-      }
-
-    } catch (error) {
-      console.error("Error al generar QR:", error);
-      setQrCodeUrl(null);
-      toast({
-        title: "Error de Conexión",
-        description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingQR(false);
-    }
-  };
 
 
   return (
@@ -208,44 +124,6 @@ export function DemoSection() {
         </div>
         <div className="flex justify-center">
           <Card className="shadow-2xl w-full">
-            {accommodationInfo && formValues ? (
-               <>
-                <CardHeader>
-                  <CardTitle>¡Bienvenido, {formValues.nombre}!</CardTitle>
-                  <CardDescription>Conecta tu WhatsApp para activar la IA en "{formValues.nombreAlojamiento}".</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">{formValues.nombreAlojamiento}</h3>
-                    <p className="text-sm text-muted-foreground">{formValues.descripcion}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <p><strong>Tipo:</strong> {formValues.tipoAlojamiento}</p>
-                    </div>
-                     <div className="flex items-center gap-2">
-                      <p><strong>Capacidad:</strong> {formValues.capacidad} personas</p>
-                    </div>
-                     <div className="flex items-center gap-2">
-                      <p><strong>Ubicación:</strong> {formValues.ubicacion}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <p><strong>Teléfono:</strong> {formValues.telefono}</p>
-                    </div>
-                  </div>
-                   {qrCodeUrl && (
-                     <div className="mt-6 text-center flex flex-col items-center">
-                       <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
-                       <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
-                       <img src={qrCodeUrl} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
-                     </div>
-                   )}
-                   <Button onClick={handleGenerateQR} className="w-full mt-4" size="lg" disabled={isGeneratingQR}>
-                    {isGeneratingQR ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
-                  </Button>
-                </CardContent>
-              </>
-            ) : (
             <>
               <CardHeader>
                 <CardTitle>1. Regístrate y Configura tu Alojamiento</CardTitle>
@@ -294,7 +172,7 @@ export function DemoSection() {
                         </FormItem>
                       )}
                     />
-                    <h3 className="text-lg font-semibold border-b pb-2 pt-4">Datos de tu Alojamiento</h3>
+                    <h3 className="text-lg font-semibold border-b pb-2 pt-4">Datos de tu Primer Alojamiento</h3>
                     <FormField
                       control={form.control}
                       name="nombreAlojamiento"
@@ -404,7 +282,6 @@ export function DemoSection() {
                 </Form>
               </CardContent>
             </>
-            )}
           </Card>
         </div>
       </div>

@@ -1,0 +1,96 @@
+"use client";
+
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface User {
+  id: number;
+  username: string;
+  email: string;
+}
+
+interface Accommodation {
+    name: string;
+    description: string;
+    amenities: string;
+    location: string;
+    contact: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  accommodations: Accommodation[];
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (jwt: string, userData: User, accommodationData: Accommodation[]) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    try {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      const storedAccommodations = localStorage.getItem('accommodations');
+
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        if (storedAccommodations) {
+          setAccommodations(JSON.parse(storedAccommodations));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse auth data from localStorage", error);
+      // Clear potentially corrupted data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('accommodations');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const login = (jwt: string, userData: User, accommodationData: Accommodation[]) => {
+    localStorage.setItem('token', jwt);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('accommodations', JSON.stringify(accommodationData));
+    setToken(jwt);
+    setUser(userData);
+    setAccommodations(accommodationData);
+    router.push('/dashboard');
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('accommodations');
+    setToken(null);
+    setUser(null);
+    setAccommodations([]);
+    router.push('/login');
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, accommodations, token, isAuthenticated: !!token, isLoading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
