@@ -22,6 +22,18 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from 'next/navigation';
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "../ui/checkbox";
+import { Switch } from "../ui/switch";
+
+const amenitiesSchema = z.object({
+  wifi: z.boolean().default(false),
+  estacionamiento: z.boolean().default(false),
+  cocina: z.boolean().default(false),
+  piscina: z.boolean().default(false),
+  ac: z.boolean().default(false),
+  calefaccion: z.boolean().default(false),
+  tv: z.boolean().default(false),
+});
 
 const formSchema = z.object({
   // Step 3 fields
@@ -38,15 +50,29 @@ const formSchema = z.object({
   descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   telefono: z.string().min(8, "Ingresa un teléfono válido."),
   ubicacion: z.string().min(3, "La ubicación es requerida."),
+  amenities: amenitiesSchema,
+  checkIn: z.string().min(1, "La hora de check-in es requerida."),
+  checkOut: z.string().min(1, "La hora de check-out es requerida."),
+  mascotas: z.boolean().default(false),
 });
 
 type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 const stepFields = {
   1: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
-  2: ["descripcion", "telefono", "ubicacion"],
+  2: ["descripcion", "telefono", "ubicacion", "amenities", "checkIn", "checkOut", "mascotas"],
   3: ["nombre", "email", "password"],
 };
+
+const amenityItems = [
+  { id: "wifi", label: "WiFi" },
+  { id: "estacionamiento", label: "Estacionamiento" },
+  { id: "cocina", label: "Cocina" },
+  { id: "piscina", label: "Piscina" },
+  { id: "ac", label: "Aire Acondicionado" },
+  { id: "calefaccion", label: "Calefacción" },
+  { id: "tv", label: "TV" },
+] as const;
 
 export function DemoSection() {
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +92,18 @@ export function DemoSection() {
       telefono: "",
       capacidad: 1,
       ubicacion: "",
+      amenities: {
+        wifi: false,
+        estacionamiento: false,
+        cocina: false,
+        piscina: false,
+        ac: false,
+        calefaccion: false,
+        tv: false,
+      },
+      checkIn: "15:00",
+      checkOut: "11:00",
+      mascotas: false,
     },
   });
 
@@ -104,10 +142,25 @@ export function DemoSection() {
         throw new Error(errorMessage);
       }
       
+       const selectedAmenities = Object.entries(values.amenities)
+        .filter(([, isSelected]) => isSelected)
+        .map(([key]) => amenityItems.find(item => item.id === key)?.label)
+        .filter(Boolean)
+        .join(', ');
+
+      const amenityDetails = [
+        `Capacidad para ${values.capacidad} personas`,
+        `Tipo: ${values.tipoAlojamiento}`,
+        selectedAmenities ? `Servicios: ${selectedAmenities}` : '',
+        `Horario de Check-in: ${values.checkIn}`,
+        `Horario de Check-out: ${values.checkOut}`,
+        `Mascotas: ${values.mascotas ? 'Sí' : 'No'}`,
+      ].filter(Boolean).join('. ');
+
       const accommodationData = {
         name: values.nombreAlojamiento,
         description: values.descripcion,
-        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Contacto: Teléfono ${values.telefono}`,
+        amenities: amenityDetails,
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}`,
         owner: registerData.user.id, 
@@ -164,7 +217,7 @@ export function DemoSection() {
                 <CardTitle>Paso {step} de 3</CardTitle>
                  <CardDescription>
                   {step === 1 && "Ingresa los datos principales de tu alojamiento."}
-                  {step === 2 && "Describe tu lugar y cómo contactarte."}
+                  {step === 2 && "Describe tu lugar, servicios y políticas."}
                   {step === 3 && "Crea tu cuenta para gestionar todo desde tu panel."}
                 </CardDescription>
                  <Progress value={(step / 3) * 100} className="mt-2" />
@@ -242,7 +295,7 @@ export function DemoSection() {
                     )}
                     
                     {step === 2 && (
-                       <div className="animate-fade-in space-y-4">
+                       <div className="animate-fade-in space-y-6">
                          <FormField
                           control={form.control}
                           name="descripcion"
@@ -255,6 +308,96 @@ export function DemoSection() {
                               <FormMessage />
                             </FormItem>
                           )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="amenities"
+                          render={() => (
+                            <FormItem>
+                              <div className="mb-4">
+                                <FormLabel className="text-base">Servicios</FormLabel>
+                                <p className="text-sm text-muted-foreground">
+                                  Selecciona los servicios que ofreces.
+                                </p>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                {amenityItems.map((item) => (
+                                  <FormField
+                                    key={item.id}
+                                    control={form.control}
+                                    name={`amenities.${item.id}`}
+                                    render={({ field }) => (
+                                      <FormItem
+                                        key={item.id}
+                                        className="flex flex-row items-start space-x-3 space-y-0"
+                                      >
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                          />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                          {item.label}
+                                        </FormLabel>
+                                      </FormItem>
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                            control={form.control}
+                            name="checkIn"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Hora de Check-in</FormLabel>
+                                <FormControl>
+                                    <Input type="time" {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name="checkOut"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Hora de Check-out</FormLabel>
+                                <FormControl>
+                                    <Input type="time" {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name="mascotas"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">
+                                    ¿Se aceptan mascotas?
+                                    </FormLabel>
+                                    <p className="text-sm text-muted-foreground">
+                                        Indica si los huéspedes pueden traer a sus mascotas.
+                                    </p>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                </FormItem>
+                            )}
                         />
                         <FormField
                           control={form.control}
@@ -358,5 +501,3 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
