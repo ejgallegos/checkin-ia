@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +34,8 @@ const amenitiesSchema = z.object({
   ac: z.boolean().default(false),
   calefaccion: z.boolean().default(false),
   tv: z.boolean().default(false),
+  banoPrivado: z.boolean().default(false),
+  ropaDeCama: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -72,6 +75,8 @@ const amenityItems = [
   { id: "ac", label: "Aire Acondicionado" },
   { id: "calefaccion", label: "Calefacción" },
   { id: "tv", label: "TV" },
+  { id: "banoPrivado", label: "Baño Privado" },
+  { id: "ropaDeCama", label: "Ropa de Cama" },
 ] as const;
 
 export function DemoSection() {
@@ -100,6 +105,8 @@ export function DemoSection() {
         ac: false,
         calefaccion: false,
         tv: false,
+        banoPrivado: false,
+        ropaDeCama: false,
       },
       checkIn: "15:00",
       checkOut: "11:00",
@@ -501,3 +508,5 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
