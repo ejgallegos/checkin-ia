@@ -155,7 +155,13 @@ export function DemoSection() {
 
       if (!registerResponse.ok) {
         const errorMessage = registerData.error?.message || 'Error en el registro. Inténtalo de nuevo.';
-        throw new Error(errorMessage);
+        toast({
+            title: "Error de Registro",
+            description: errorMessage,
+            variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
       
        const selectedAmenities = Object.entries(values.amenities)
