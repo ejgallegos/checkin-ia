@@ -39,7 +39,7 @@ const amenitiesSchema = z.object({
 });
 
 const formSchema = z.object({
-  // Step 3 fields
+  // Step 4 fields
   nombre: z.string().min(2, "El nombre es requerido."),
   email: z.string().email("Ingresa un email válido."),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
@@ -50,22 +50,29 @@ const formSchema = z.object({
   }),
   capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
   // Step 2 fields
-  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   telefono: z.string().min(8, "Ingresa un teléfono válido."),
   ubicacion: z.string().min(3, "La ubicación es requerida."),
   amenities: amenitiesSchema,
   checkIn: z.string().min(1, "La hora de check-in es requerida."),
   checkOut: z.string().min(1, "La hora de check-out es requerida."),
   mascotas: z.boolean().default(false),
+   // Step 3 fields
+  politicaCancelacion: z.string().min(10, "Describe tu política de cancelación."),
+  metodosPago: z.string().min(3, "Menciona al menos un método de pago."),
+  reglasCasa: z.string().optional(),
+  // Step 2 field (moved)
+  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
 });
 
 type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 const stepFields = {
   1: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
-  2: ["descripcion", "telefono", "ubicacion", "amenities", "checkIn", "checkOut", "mascotas"],
-  3: ["nombre", "email", "password"],
+  2: ["amenities", "checkIn", "checkOut", "mascotas", "ubicacion", "telefono", "descripcion"],
+  3: ["politicaCancelacion", "metodosPago", "reglasCasa"],
+  4: ["nombre", "email", "password"],
 };
+
 
 const amenityItems = [
   { id: "wifi", label: "WiFi" },
@@ -111,6 +118,9 @@ export function DemoSection() {
       checkIn: "15:00",
       checkOut: "11:00",
       mascotas: false,
+      politicaCancelacion: "",
+      metodosPago: "",
+      reglasCasa: "",
     },
   });
 
@@ -154,6 +164,12 @@ export function DemoSection() {
         .map(([key]) => amenityItems.find(item => item.id === key)?.label)
         .filter(Boolean)
         .join(', ');
+        
+      const policyDetails = [
+        `Política de Cancelación: ${values.politicaCancelacion}`,
+        `Métodos de Pago: ${values.metodosPago}`,
+        values.reglasCasa ? `Reglas de la Casa: ${values.reglasCasa}`: '',
+      ].filter(Boolean).join('. ');
 
       const amenityDetails = [
         `Capacidad para ${values.capacidad} personas`,
@@ -163,10 +179,12 @@ export function DemoSection() {
         `Horario de Check-out: ${values.checkOut}`,
         `Mascotas: ${values.mascotas ? 'Sí' : 'No'}`,
       ].filter(Boolean).join('. ');
+      
+      const fullDescription = `${values.descripcion}. ${policyDetails}`;
 
       const accommodationData = {
         name: values.nombreAlojamiento,
-        description: values.descripcion,
+        description: fullDescription,
         amenities: amenityDetails,
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}`,
@@ -221,13 +239,14 @@ export function DemoSection() {
         <div className="flex justify-center">
           <Card className="shadow-2xl w-full">
               <CardHeader>
-                <CardTitle>Paso {step} de 3</CardTitle>
+                <CardTitle>Paso {step} de 4</CardTitle>
                  <CardDescription>
                   {step === 1 && "Ingresa los datos principales de tu alojamiento."}
-                  {step === 2 && "Describe tu lugar, servicios y políticas."}
-                  {step === 3 && "Crea tu cuenta para gestionar todo desde tu panel."}
+                  {step === 2 && "Describe tu lugar, servicios y contacto."}
+                  {step === 3 && "Define las reglas y políticas de tu alojamiento."}
+                  {step === 4 && "Crea tu cuenta para gestionar todo desde tu panel."}
                 </CardDescription>
-                 <Progress value={(step / 3) * 100} className="mt-2" />
+                 <Progress value={(step / 4) * 100} className="mt-2" />
               </CardHeader>
               <CardContent>
                 <Form {...form}>
@@ -442,8 +461,52 @@ export function DemoSection() {
                         />
                        </div>
                     )}
-
+                    
                     {step === 3 && (
+                        <div className="animate-fade-in space-y-6">
+                            <FormField
+                            control={form.control}
+                            name="politicaCancelacion"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Política de Cancelación</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Ej: Reembolso completo si se cancela 5 días antes de la llegada..." {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name="metodosPago"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Métodos de Pago Aceptados</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ej: Transferencia, Mercado Pago, Efectivo" {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name="reglasCasa"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Reglas de la Casa (Opcional)</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Ej: No fumar, no hacer fiestas, horario de silencio..." {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                    )}
+
+                    {step === 4 && (
                        <div className="animate-fade-in space-y-4">
                          <FormField
                           control={form.control}
@@ -495,13 +558,13 @@ export function DemoSection() {
                          </Button>
                       ) : <div />}
 
-                      {step < 3 && (
+                      {step < 4 && (
                          <Button type="button" onClick={handleNextStep} disabled={isLoading}>
                            Siguiente
                          </Button>
                       )}
 
-                      {step === 3 && (
+                      {step === 4 && (
                         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
                           {isLoading ? <Loader className="animate-spin" /> : 'Registrar y Activar IA'}
                         </Button>
