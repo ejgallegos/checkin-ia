@@ -296,19 +296,6 @@ export function DemoSection() {
                     
                     {step === 2 && (
                        <div className="animate-fade-in space-y-6">
-                         <FormField
-                          control={form.control}
-                          name="descripcion"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Descripción</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                         <FormField
                           control={form.control}
                           name="amenities"
@@ -420,6 +407,19 @@ export function DemoSection() {
                               <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
                               <FormControl>
                                 <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={form.control}
+                          name="descripcion"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descripción en General</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Describe tu lugar, qué lo hace especial..." {...field} disabled={isLoading}/>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
