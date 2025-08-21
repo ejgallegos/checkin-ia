@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
 import { useState } from "react";
-import { Loader, ArrowLeft } from "lucide-react";
+import { Loader, ArrowLeft, Map } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from 'next/navigation';
@@ -398,10 +398,18 @@ export function DemoSection() {
                           name="ubicacion"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Ubicación</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Ej: San Martín de los Andes, a 2km del centro" {...field} disabled={isLoading}/>
-                              </FormControl>
+                              <FormLabel>Ubicación (Coordenadas de Google Maps)</FormLabel>
+                               <p className="text-[0.8rem] text-muted-foreground">
+                                 Busca tu dirección en Google Maps, haz clic derecho en la ubicación y copia las coordenadas.
+                               </p>
+                              <div className="flex gap-2">
+                                <FormControl>
+                                    <Input placeholder="Ej: -29.4134, -68.7745" {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <Button type="button" variant="outline" size="icon" onClick={() => window.open('https://maps.google.com', '_blank')}>
+                                    <Map className="h-4 w-4" />
+                                </Button>
+                               </div>
                               <FormMessage />
                             </FormItem>
                           )}
