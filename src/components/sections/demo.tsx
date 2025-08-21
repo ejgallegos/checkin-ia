@@ -50,6 +50,7 @@ const formSchema = z.object({
   }),
   capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
   // Step 2 fields
+  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
   telefono: z.string().min(8, "Ingresa un teléfono válido."),
   ubicacion: z.string().min(3, "La ubicación es requerida."),
   amenities: amenitiesSchema,
@@ -60,15 +61,13 @@ const formSchema = z.object({
   politicaCancelacion: z.string().min(10, "Describe tu política de cancelación."),
   metodosPago: z.string().min(3, "Menciona al menos un método de pago."),
   reglasCasa: z.string().optional(),
-  // Step 2 field (moved)
-  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
 });
 
 type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 const stepFields = {
   1: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
-  2: ["amenities", "checkIn", "checkOut", "mascotas", "ubicacion", "telefono", "descripcion"],
+  2: ["descripcion", "telefono", "ubicacion", "amenities", "checkIn", "checkOut", "mascotas"],
   3: ["politicaCancelacion", "metodosPago", "reglasCasa"],
   4: ["nombre", "email", "password"],
 };
@@ -242,7 +241,7 @@ export function DemoSection() {
                 <CardTitle>Paso {step} de 4</CardTitle>
                  <CardDescription>
                   {step === 1 && "Ingresa los datos principales de tu alojamiento."}
-                  {step === 2 && "Describe tu lugar, servicios y contacto."}
+                  {step === 2 && "Describe los servicios, detalles y la descripción general de tu lugar."}
                   {step === 3 && "Define las reglas y políticas de tu alojamiento."}
                   {step === 4 && "Crea tu cuenta para gestionar todo desde tu panel."}
                 </CardDescription>
@@ -414,6 +413,19 @@ export function DemoSection() {
                         />
                         <FormField
                           control={form.control}
+                          name="telefono"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
+                              <FormControl>
+                                <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
                           name="ubicacion"
                           render={({ field }) => (
                             <FormItem>
@@ -429,19 +441,6 @@ export function DemoSection() {
                                     <Map className="h-4 w-4" />
                                 </Button>
                                </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="telefono"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
-                              <FormControl>
-                                <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
-                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
