@@ -164,12 +164,12 @@ export function DemoSection() {
         return;
       }
       
-       const selectedAmenities = Object.entries(values.amenities)
+      const selectedAmenities = Object.entries(values.amenities)
         .filter(([, isSelected]) => isSelected)
         .map(([key]) => amenityItems.find(item => item.id === key)?.label)
         .filter(Boolean)
         .join(', ');
-        
+
       const policyDetails = [
         `Política de Cancelación: ${values.politicaCancelacion}`,
         `Métodos de Pago: ${values.metodosPago}`,
@@ -184,16 +184,18 @@ export function DemoSection() {
         `Horario de Check-out: ${values.checkOut}`,
         `Mascotas: ${values.mascotas ? 'Sí' : 'No'}`,
       ].filter(Boolean).join('. ');
-      
-      const fullDescription = `${values.descripcion}. ${policyDetails}`;
 
-      const accommodationData = {
-        name: values.nombreAlojamiento,
-        description: fullDescription,
-        amenities: amenityDetails,
-        location: values.ubicacion,
-        contact: `Teléfono: ${values.telefono}`,
-        owner: registerData.user.id, 
+      const fullDescription = `${values.descripcion}. ${policyDetails}`;
+      
+      // This is the object that will be sent to the API to create the accommodation.
+      // It matches the curl provided.
+      const accommodationDataForApi = {
+          name: values.nombreAlojamiento,
+          description: fullDescription,
+          amenities: amenityDetails,
+          location: values.ubicacion,
+          contact: `Teléfono: ${values.telefono}`,
+          owner: registerData.user.id,
       };
 
       const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/accommodations', {
@@ -202,7 +204,7 @@ export function DemoSection() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${registerData.jwt}`
         },
-        body: JSON.stringify({ data: accommodationData })
+        body: JSON.stringify({ data: accommodationDataForApi })
       });
       
       if (!createAccommodationResponse.ok) {
@@ -210,7 +212,16 @@ export function DemoSection() {
           throw new Error(errorData.error?.message || 'No se pudo crear el alojamiento.');
       }
       
-      login(registerData.jwt, registerData.user, [accommodationData]);
+      // For the frontend state, we use a simpler object.
+      const accommodationDataForState = {
+        name: values.nombreAlojamiento,
+        description: fullDescription,
+        amenities: amenityDetails,
+        location: values.ubicacion,
+        contact: `Teléfono: ${values.telefono}`,
+      };
+      
+      login(registerData.jwt, registerData.user, [accommodationDataForState]);
 
       toast({
         title: "¡Registro Exitoso!",
