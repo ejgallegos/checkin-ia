@@ -39,37 +39,40 @@ const amenitiesSchema = z.object({
 });
 
 const formSchema = z.object({
-  // Step 4 fields
+  // Step 1: User Registration
   nombre: z.string().min(2, "El nombre es requerido."),
   email: z.string().email("Ingresa un email válido."),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
-  // Step 1 fields
+  
+  // Step 2: Accommodation Main Info
   nombreAlojamiento: z.string().min(2, "El nombre del alojamiento debe tener al menos 2 caracteres."),
   tipoAlojamiento: z.enum(["departamento", "cabaña", "casa"], {
     required_error: "Debes seleccionar un tipo de alojamiento."
   }),
   capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
-  // Step 2 fields
-  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
-  telefono: z.string().min(8, "Ingresa un teléfono válido."),
-  ubicacion: z.string().min(3, "La ubicación es requerida."),
+
+  // Step 3: Amenities and Policies
   amenities: amenitiesSchema,
+  politicaCancelacion: z.string().min(10, "Describe tu política de cancelación."),
+  metodosPago: z.string().min(3, "Menciona al menos un método de pago."),
+  
+  // Step 4: Final Details
   checkIn: z.string().min(1, "La hora de check-in es requerida."),
   checkOut: z.string().min(1, "La hora de check-out es requerida."),
   mascotas: z.boolean().default(false),
-   // Step 3 fields
-  politicaCancelacion: z.string().min(10, "Describe tu política de cancelación."),
-  metodosPago: z.string().min(3, "Menciona al menos un método de pago."),
   reglasCasa: z.string().optional(),
+  telefono: z.string().min(8, "Ingresa un teléfono válido."),
+  ubicacion: z.string().min(3, "La ubicación es requerida."),
+  descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
 });
 
 type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 const stepFields = {
-  1: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
-  2: ["descripcion", "telefono", "ubicacion", "amenities", "checkIn", "checkOut", "mascotas"],
-  3: ["politicaCancelacion", "metodosPago", "reglasCasa"],
-  4: ["nombre", "email", "password"],
+  1: ["nombre", "email", "password"],
+  2: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
+  3: ["amenities", "politicaCancelacion", "metodosPago"],
+  4: ["checkIn", "checkOut", "mascotas", "reglasCasa", "telefono", "ubicacion", "descripcion"],
 };
 
 
@@ -187,8 +190,6 @@ export function DemoSection() {
 
       const fullDescription = `${values.descripcion}. ${policyDetails}`;
       
-      // This is the object that will be sent to the API to create the accommodation.
-      // It matches the curl provided.
       const accommodationDataForApi = {
           name: values.nombreAlojamiento,
           description: fullDescription,
@@ -198,7 +199,7 @@ export function DemoSection() {
           owner: registerData.user.id,
       };
 
-      const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/accommodations', {
+      const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/alojamientos', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -212,7 +213,6 @@ export function DemoSection() {
           throw new Error(errorData.error?.message || 'No se pudo crear el alojamiento.');
       }
       
-      // For the frontend state, we use a simpler object.
       const accommodationDataForState = {
         name: values.nombreAlojamiento,
         description: fullDescription,
@@ -257,10 +257,10 @@ export function DemoSection() {
               <CardHeader>
                 <CardTitle>Paso {step} de 4</CardTitle>
                  <CardDescription>
-                  {step === 1 && "Ingresa los datos principales de tu alojamiento."}
-                  {step === 2 && "Describe los servicios, detalles y la descripción general de tu lugar."}
-                  {step === 3 && "Define las reglas y políticas de tu alojamiento."}
-                  {step === 4 && "Crea tu cuenta para gestionar todo desde tu panel."}
+                  {step === 1 && "Crea tu cuenta para gestionar todo desde tu panel."}
+                  {step === 2 && "Ingresa los datos principales de tu alojamiento."}
+                  {step === 3 && "Define los servicios que ofreces y las políticas principales."}
+                  {step === 4 && "Añade los últimos detalles para completar la configuración."}
                 </CardDescription>
                  <Progress value={(step / 4) * 100} className="mt-2" />
               </CardHeader>
@@ -269,6 +269,50 @@ export function DemoSection() {
                   <form onSubmit={form.handleSubmit(onInfoSubmit)} className="space-y-6">
                     
                     {step === 1 && (
+                       <div className="animate-fade-in space-y-4">
+                         <FormField
+                          control={form.control}
+                          name="nombre"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nombre Completo</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Ej: Ana Pérez" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="tu@email.com" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Contraseña</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} disabled={isLoading}/>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                       </div>
+                    )}
+
+                    {step === 2 && (
                       <div className="animate-fade-in space-y-4">
                          <FormField
                           control={form.control}
@@ -336,7 +380,7 @@ export function DemoSection() {
                       </div>
                     )}
                     
-                    {step === 2 && (
+                    {step === 3 && (
                        <div className="animate-fade-in space-y-6">
                         <FormField
                           control={form.control}
@@ -378,7 +422,38 @@ export function DemoSection() {
                             </FormItem>
                           )}
                         />
-                         <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="politicaCancelacion"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Política de Cancelación</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="Ej: Reembolso completo si se cancela 5 días antes de la llegada..." {...field} disabled={isLoading}/>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="metodosPago"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Métodos de Pago Aceptados</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Ej: Transferencia, Mercado Pago, Efectivo" {...field} disabled={isLoading}/>
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                       </div>
+                    )}
+                    
+                    {step === 4 && (
+                        <div className="animate-fade-in space-y-6">
+                           <div className="grid grid-cols-2 gap-4">
                             <FormField
                             control={form.control}
                             name="checkIn"
@@ -428,6 +503,19 @@ export function DemoSection() {
                                 </FormItem>
                             )}
                         />
+                         <FormField
+                            control={form.control}
+                            name="reglasCasa"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Reglas de la Casa (Opcional)</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Ej: No fumar, no hacer fiestas, horario de silencio..." {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
                         <FormField
                           control={form.control}
                           name="telefono"
@@ -475,95 +563,7 @@ export function DemoSection() {
                             </FormItem>
                           )}
                         />
-                       </div>
-                    )}
-                    
-                    {step === 3 && (
-                        <div className="animate-fade-in space-y-6">
-                            <FormField
-                            control={form.control}
-                            name="politicaCancelacion"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Política de Cancelación</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Ej: Reembolso completo si se cancela 5 días antes de la llegada..." {...field} disabled={isLoading}/>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="metodosPago"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Métodos de Pago Aceptados</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Ej: Transferencia, Mercado Pago, Efectivo" {...field} disabled={isLoading}/>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name="reglasCasa"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Reglas de la Casa (Opcional)</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Ej: No fumar, no hacer fiestas, horario de silencio..." {...field} disabled={isLoading}/>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
                         </div>
-                    )}
-
-                    {step === 4 && (
-                       <div className="animate-fade-in space-y-4">
-                         <FormField
-                          control={form.control}
-                          name="nombre"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nombre Completo</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Ej: Ana Pérez" {...field} disabled={isLoading}/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="tu@email.com" {...field} disabled={isLoading}/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                         <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Contraseña</FormLabel>
-                              <FormControl>
-                                <Input type="password" placeholder="••••••••" {...field} disabled={isLoading}/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                       </div>
                     )}
 
                     <div className="flex justify-between pt-4">
@@ -581,8 +581,8 @@ export function DemoSection() {
                       )}
 
                       {step === 4 && (
-                        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                          {isLoading ? <Loader className="animate-spin" /> : 'Registrar y Activar IA'}
+                        <Button type="submit" size="lg" disabled={isLoading}>
+                          {isLoading ? <Loader className="animate-spin" /> : 'Finalizar y Activar IA'}
                         </Button>
                       )}
                     </div>
