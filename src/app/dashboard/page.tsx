@@ -213,14 +213,18 @@ export default function DashboardPage() {
                     <AccordionItem value="item-2">
                         <AccordionTrigger>Horarios y Políticas</AccordionTrigger>
                         <AccordionContent className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-primary"/>
-                                <strong>Check-in:</strong> {alojamiento.checkin.substring(0,5)} hs
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-primary"/>
-                                <strong>Check-out:</strong> {alojamiento.checkout.substring(0,5)} hs
-                            </div>
+                            {alojamiento.checkin && (
+                                <div className="flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-primary"/>
+                                    <strong>Check-in:</strong> {alojamiento.checkin.substring(0,5)} hs
+                                </div>
+                            )}
+                            {alojamiento.checkout && (
+                                <div className="flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-primary"/>
+                                    <strong>Check-out:</strong> {alojamiento.checkout.substring(0,5)} hs
+                                </div>
+                            )}
                             <div className="flex items-start gap-2 mt-2">
                                 <Info className="w-5 h-5 text-primary flex-shrink-0 mt-1"/>
                                 <div>
