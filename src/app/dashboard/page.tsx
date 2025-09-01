@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, X } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -44,7 +44,6 @@ const accommodationTypeIcons: { [key: string]: JSX.Element } = {
     casa: <Home className="w-5 h-5 text-muted-foreground" />,
 };
 
-
 export default function DashboardPage() {
   const { user, accommodations, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
@@ -60,59 +59,27 @@ export default function DashboardPage() {
   }, [isAuthenticated, authLoading, router]);
 
   const handleGenerateQR = async (alojamientoId: number, alojamientoNombre: string) => {
-    if (!alojamientoNombre) return;
-
     setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: true}));
-    setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: null}));
 
     try {
       const encodedDenominacion = encodeURIComponent(alojamientoNombre);
       const apiKey = 'evolution_api_69976825';
       const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}?apikey=${apiKey}`;
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json',
-        },
-      });
-      
+      const response = await fetch(apiUrl);
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || `Error del servidor: ${response.status}`);
+      if (!response.ok || !data.base64) {
+        throw new Error(data.message || 'La respuesta de la API no contiene un código QR válido.');
       }
       
-      if (data.base64) {
-        setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: data.base64}));
-        toast({
-          title: "¡QR Generado!",
-          description: "Escanea el código con tu app de WhatsApp para conectar.",
-        });
-        
-        const webhookPayload = {
-            webhook: {
-                enabled: true,
-                url: "https://n8n.gali.com.ar/webhook/4cf2663e-d777-42a1-8557-8c418a451156",
-                events: ["MESSAGES_UPSERT"],
-                base64: false,
-                "byEvents": false
-            }
-        };
-        await fetch(`https://evolution.gali.com.ar/webhook/set/${encodedDenominacion}?apikey=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(webhookPayload)
-        });
-
-      } else {
-        throw new Error("La respuesta de la API no contiene un código QR válido.");
-      }
+      setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: data.base64}));
+      toast({
+        title: "¡QR Generado!",
+        description: "Escanea el código con tu app de WhatsApp para conectar.",
+      });
 
     } catch (error) {
-      setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: null}));
       toast({
         title: "Error de Conexión",
         description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
@@ -122,7 +89,6 @@ export default function DashboardPage() {
       setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: false}));
     }
   };
-
 
   if (authLoading || !isAuthenticated) {
     return (
@@ -160,31 +126,32 @@ export default function DashboardPage() {
             </Button>
         </div>
         
-        {accommodations.length === 0 && (
+        {accommodations.length === 0 ? (
             <Card className="shadow-lg text-center">
                 <CardHeader>
-                    <CardTitle>No tienes alojamientos</CardTitle>
+                    <CardTitle>No tienes alojamientos registrados</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>Parece que aún no has registrado ningún alojamiento.</p>
+                    <p>Parece que aún no has añadido ningún alojamiento a tu cuenta.</p>
                     <Button asChild className="mt-4">
                         <a href="/#demo">Registra tu Primer Alojamiento</a>
                     </Button>
                 </CardContent>
             </Card>
-        )}
-
-        {accommodations.map((alojamiento) => {
+        ) : (
+            accommodations.map((alojamiento) => {
              const services = alojamiento.Servicios;
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
              <CardHeader>
                <CardTitle className="flex items-center gap-2">{alojamiento.denominacion}
-                <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
-                    - {alojamiento.tipo && accommodationTypeIcons[alojamiento.tipo]} {alojamiento.tipo}
-                </span>
+                {alojamiento.tipo && (
+                    <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
+                        - {accommodationTypeIcons[alojamiento.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {alojamiento.tipo}
+                    </span>
+                )}
                </CardTitle>
-               <CardDescription>Conecta tu WhatsApp para activar la IA en este alojamiento.</CardDescription>
+               <CardDescription>Gestiona la conexión de IA para este alojamiento.</CardDescription>
              </CardHeader>
              <CardContent className="space-y-4">
                
@@ -197,22 +164,24 @@ export default function DashboardPage() {
                <Separator />
 
                 <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1">
-                        <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
-                        <AccordionContent>
-                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                            {services && typeof services === 'object' && Object.entries(services)
-                                .filter(([key]) => key !== 'id' && serviceIcons[key])
-                                .map(([key, value]) => (
-                                <div key={key} className="flex items-center gap-2">
-                                    {serviceIcons[key]}
-                                    <span>{serviceLabels[key]}</span>
-                                    {value ? <Check className="w-5 h-5 text-green-500" /> : <X className="w-5 h-5 text-red-500" />}
+                    {services && typeof services === 'object' && (
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
+                            <AccordionContent>
+                               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                                {Object.entries(services)
+                                    .filter(([key, value]) => value === true && serviceIcons[key])
+                                    .map(([key]) => (
+                                    <div key={key} className="flex items-center gap-2">
+                                        {serviceIcons[key]}
+                                        <span>{serviceLabels[key]}</span>
+                                        <Check className="w-5 h-5 text-green-500" />
+                                    </div>
+                                ))}
                                 </div>
-                            ))}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                            </AccordionContent>
+                        </AccordionItem>
+                    )}
                     <AccordionItem value="item-2">
                         <AccordionTrigger>Horarios y Políticas</AccordionTrigger>
                         <AccordionContent className="space-y-2">
@@ -258,29 +227,25 @@ export default function DashboardPage() {
                     </AccordionItem>
                 </Accordion>
                 
-                {qrCodeUrl[String(alojamiento.id)] && (
-                  <div className="mt-6 text-center flex flex-col items-center">
-                    <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
-                    <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
-                  </div>
-                )}
-                
-                <div className="mt-4">
-                  <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
-                    {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
-                  </Button>
+                <div className="mt-6 text-center flex flex-col items-center">
+                    {qrCodeUrl[String(alojamiento.id)] ? (
+                      <>
+                        <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
+                        <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
+                        <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
+                      </>
+                    ) : (
+                       <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
+                        {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp con IA </>}
+                      </Button>
+                    )}
                 </div>
              </CardContent>
            </Card>
-        )})}
-
+             );
+            })}
       </main>
       <Footer />
     </div>
   );
 }
-
-
-
-    
