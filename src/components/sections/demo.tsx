@@ -31,7 +31,7 @@ const amenitiesSchema = z.object({
   estacionamiento: z.boolean().default(false),
   cocina: z.boolean().default(false),
   piscina: z.boolean().default(false),
-  ac: z.boolean().default(false),
+  aire_acondicionado: z.boolean().default(false),
   calefaccion: z.boolean().default(false),
   tv: z.boolean().default(false),
   banoPrivado: z.boolean().default(false),
@@ -81,7 +81,7 @@ const amenityItems = [
   { id: "estacionamiento", label: "Estacionamiento" },
   { id: "cocina", label: "Cocina" },
   { id: "piscina", label: "Piscina" },
-  { id: "ac", label: "Aire Acondicionado" },
+  { id: "aire_acondicionado", label: "Aire Acondicionado" },
   { id: "calefaccion", label: "Calefacción" },
   { id: "tv", label: "TV" },
   { id: "banoPrivado", label: "Baño Privado" },
@@ -112,7 +112,7 @@ export function DemoSection() {
         estacionamiento: false,
         cocina: false,
         piscina: false,
-        ac: false,
+        aire_acondicionado: false,
         calefaccion: false,
         tv: false,
         banoPrivado: false,
@@ -170,11 +170,29 @@ export function DemoSection() {
       
       const accommodationDataForApi = {
         data: {
-          name: values.nombreAlojamiento,
-          description: values.descripcion,
-          amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Servicios: ${Object.entries(values.amenities).filter(([, v]) => v).map(([k]) => amenityItems.find(i => i.id === k)?.label).join(', ')}. Mascotas: ${values.mascotas ? 'Sí' : 'No'}. Horario de Check-in: ${values.checkIn}. Horario de Check-out: ${values.checkOut}.`,
-          location: values.ubicacion,
-          contact: `Teléfono: ${values.telefono}`,
+          denominacion: values.nombreAlojamiento,
+          tipo: values.tipoAlojamiento,
+          capacidad: values.capacidad,
+          Servicios: {
+            wifi: values.amenities.wifi,
+            cocina: values.amenities.cocina,
+            aire_acondicionado: values.amenities.aire_acondicionado,
+            estacionamiento: values.amenities.estacionamiento,
+            ropa_cama: values.amenities.ropaDeCama,
+            tv: values.amenities.tv,
+            piscina: values.amenities.piscina,
+            calefaccion: values.amenities.calefaccion,
+            bano_privado: values.amenities.banoPrivado,
+            mascotas: values.mascotas,
+          },
+          checkin: values.checkIn,
+          checkout: values.checkOut,
+          telefono: values.telefono,
+          ubicacion: values.ubicacion,
+          descripcion: values.descripcion,
+          politica_cancelacion: values.politicaCancelacion,
+          metodo_pago: values.metodosPago,
+          reglas_casa: values.reglasCasa,
           owner: registerData.user.id,
         }
       };
@@ -581,7 +599,3 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
-
-    
