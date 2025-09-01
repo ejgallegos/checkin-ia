@@ -135,7 +135,10 @@ export default function DashboardPage() {
             </Card>
         ) : (
             accommodations.map((alojamiento) => {
-             const services = alojamiento.Servicios;
+             const services = alojamiento.Servicios || {};
+             const availableServices = Object.entries(services)
+                .filter(([key, value]) => value === true && serviceIcons[key]);
+
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
              <CardHeader>
@@ -159,14 +162,12 @@ export default function DashboardPage() {
                <Separator />
 
                 <Accordion type="single" collapsible className="w-full">
-                    {services && typeof services === 'object' && Object.values(services).some(v => v === true) && (
+                    {availableServices.length > 0 && (
                         <AccordionItem value="item-1">
                             <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
                             <AccordionContent>
                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                                {Object.entries(services)
-                                    .filter(([key, value]) => value === true && serviceIcons[key])
-                                    .map(([key]) => (
+                                {availableServices.map(([key]) => (
                                     <div key={key} className="flex items-center gap-2">
                                         {serviceIcons[key]}
                                         <span>{serviceLabels[key]}</span>
