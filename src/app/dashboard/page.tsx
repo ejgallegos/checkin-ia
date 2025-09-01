@@ -60,25 +60,20 @@ export default function DashboardPage() {
 
   const handleGenerateQR = async (alojamientoId: number, alojamientoNombre: string) => {
     setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: true}));
-
     try {
       const encodedDenominacion = encodeURIComponent(alojamientoNombre);
       const apiKey = 'evolution_api_69976825';
       const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}?apikey=${apiKey}`;
-
       const response = await fetch(apiUrl);
       const data = await response.json();
-
       if (!response.ok || !data.base64) {
         throw new Error(data.message || 'La respuesta de la API no contiene un código QR válido.');
       }
-      
       setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: data.base64}));
       toast({
         title: "¡QR Generado!",
         description: "Escanea el código con tu app de WhatsApp para conectar.",
       });
-
     } catch (error) {
       toast({
         title: "Error de Conexión",
