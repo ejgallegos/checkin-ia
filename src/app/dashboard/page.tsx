@@ -121,7 +121,7 @@ export default function DashboardPage() {
             </Button>
         </div>
         
-        {accommodations.length === 0 ? (
+        {!accommodations || accommodations.length === 0 ? (
             <Card className="shadow-lg text-center">
                 <CardHeader>
                     <CardTitle>No tienes alojamientos registrados</CardTitle>
@@ -135,6 +135,7 @@ export default function DashboardPage() {
             </Card>
         ) : (
             accommodations.map((alojamiento) => {
+             if (!alojamiento) return null;
              const services = alojamiento.Servicios || {};
              const availableServices = Object.entries(services)
                 .filter(([key, value]) => value === true && serviceIcons[key]);
