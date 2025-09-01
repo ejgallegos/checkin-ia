@@ -173,7 +173,7 @@ export function DemoSection() {
           denominacion: values.nombreAlojamiento,
           tipo: values.tipoAlojamiento,
           capacidad: values.capacidad,
-          Servicios: {
+          Servicios: { // <-- Ensure this is uppercase 'S'
             wifi: values.amenities.wifi,
             cocina: values.amenities.cocina,
             aire_acondicionado: values.amenities.aire_acondicionado,

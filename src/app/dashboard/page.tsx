@@ -175,7 +175,7 @@ export default function DashboardPage() {
         )}
 
         {accommodations.map((alojamiento) => {
-             const services = alojamiento.Servicios || alojamiento.servicios;
+             const services = alojamiento.Servicios;
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
              <CardHeader>
