@@ -67,10 +67,12 @@ export default function DashboardPage() {
 
     try {
       const encodedDenominacion = encodeURIComponent(alojamientoNombre);
-      const response = await fetch(`https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`, {
+      const apiKey = 'evolution_api_69976825';
+      const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}?apikey=${apiKey}`;
+
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'apikey': 'evolution_api_69976825',
           'accept': 'application/json',
         },
       });
@@ -101,10 +103,9 @@ export default function DashboardPage() {
                 "byEvents": false
             }
         };
-        await fetch(`https://evolution.gali.com.ar/webhook/set/${encodedDenominacion}`, {
+        await fetch(`https://evolution.gali.com.ar/webhook/set/${encodedDenominacion}?apikey=${apiKey}`, {
             method: 'POST',
             headers: {
-                'apikey': 'evolution_api_69976825',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(webhookPayload)
@@ -281,3 +282,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
