@@ -102,6 +102,7 @@ export function DemoSection() {
       email: "",
       password: "",
       nombreAlojamiento: "",
+      tipoAlojamiento: "departamento",
       descripcion: "",
       telefono: "",
       capacidad: 1,
@@ -167,45 +168,24 @@ export function DemoSection() {
         return;
       }
       
-      const selectedAmenities = Object.entries(values.amenities)
-        .filter(([, isSelected]) => isSelected)
-        .map(([key]) => amenityItems.find(item => item.id === key)?.label)
-        .filter(Boolean)
-        .join(', ');
-
-      const policyDetails = [
-        `Política de Cancelación: ${values.politicaCancelacion}`,
-        `Métodos de Pago: ${values.metodosPago}`,
-        values.reglasCasa ? `Reglas de la Casa: ${values.reglasCasa}`: '',
-      ].filter(Boolean).join('. ');
-
-      const amenityDetails = [
-        `Capacidad para ${values.capacidad} personas`,
-        `Tipo: ${values.tipoAlojamiento}`,
-        selectedAmenities ? `Servicios: ${selectedAmenities}` : '',
-        `Horario de Check-in: ${values.checkIn}`,
-        `Horario de Check-out: ${values.checkOut}`,
-        `Mascotas: ${values.mascotas ? 'Sí' : 'No'}`,
-      ].filter(Boolean).join('. ');
-
-      const fullDescription = `${values.descripcion}. ${policyDetails}`;
-      
       const accommodationDataForApi = {
+        data: {
           name: values.nombreAlojamiento,
-          description: fullDescription,
-          amenities: amenityDetails,
+          description: values.descripcion,
+          amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Servicios: ${Object.entries(values.amenities).filter(([, v]) => v).map(([k]) => amenityItems.find(i => i.id === k)?.label).join(', ')}. Mascotas: ${values.mascotas ? 'Sí' : 'No'}. Horario de Check-in: ${values.checkIn}. Horario de Check-out: ${values.checkOut}.`,
           location: values.ubicacion,
           contact: `Teléfono: ${values.telefono}`,
           owner: registerData.user.id,
+        }
       };
-
+      
       const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/alojamientos', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${registerData.jwt}`
         },
-        body: JSON.stringify({ data: accommodationDataForApi })
+        body: JSON.stringify(accommodationDataForApi)
       });
       
       if (!createAccommodationResponse.ok) {
@@ -218,11 +198,11 @@ export function DemoSection() {
           setIsLoading(false);
           return;
       }
-      
+
       const accommodationDataForState = {
         name: values.nombreAlojamiento,
-        description: fullDescription,
-        amenities: amenityDetails,
+        description: values.descripcion,
+        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Servicios: ${Object.entries(values.amenities).filter(([, v]) => v).map(([k]) => amenityItems.find(i => i.id === k)?.label).join(', ')}. Mascotas: ${values.mascotas ? 'Sí' : 'No'}. Horario de Check-in: ${values.checkIn}. Horario de Check-out: ${values.checkOut}.`,
         location: values.ubicacion,
         contact: `Teléfono: ${values.telefono}`,
       };
@@ -601,5 +581,7 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
 
     
