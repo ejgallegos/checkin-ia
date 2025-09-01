@@ -178,7 +178,7 @@ export default function DashboardPage() {
              <CardHeader>
                <CardTitle className="flex items-center gap-2">{alojamiento.denominacion}
                 <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
-                    - {accommodationTypeIcons[alojamiento.tipo]} {alojamiento.tipo}
+                    - {alojamiento.tipo && accommodationTypeIcons[alojamiento.tipo]} {alojamiento.tipo}
                 </span>
                </CardTitle>
                <CardDescription>Conecta tu WhatsApp para activar la IA en este alojamiento.</CardDescription>
@@ -225,26 +225,32 @@ export default function DashboardPage() {
                                     <strong>Check-out:</strong> {alojamiento.checkout.substring(0,5)} hs
                                 </div>
                             )}
-                            <div className="flex items-start gap-2 mt-2">
-                                <Info className="w-5 h-5 text-primary flex-shrink-0 mt-1"/>
-                                <div>
-                                    <strong>Política de Cancelación:</strong>
-                                    <p className="text-muted-foreground">{alojamiento.politica_cancelacion}</p>
+                             {alojamiento.politica_cancelacion && (
+                                <div className="flex items-start gap-2 mt-2">
+                                    <Info className="w-5 h-5 text-primary flex-shrink-0 mt-1"/>
+                                    <div>
+                                        <strong>Política de Cancelación:</strong>
+                                        <p className="text-muted-foreground">{alojamiento.politica_cancelacion}</p>
+                                    </div>
                                 </div>
-                            </div>
+                             )}
                         </AccordionContent>
                     </AccordionItem>
                      <AccordionItem value="item-3">
                         <AccordionTrigger>Descripción y Reglas</AccordionTrigger>
                         <AccordionContent className="space-y-4">
-                             <div>
-                                <strong>Descripción General:</strong>
-                                <p className="text-muted-foreground">{alojamiento.descripcion}</p>
-                            </div>
-                             <div>
-                                <strong>Reglas de la Casa:</strong>
-                                <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
-                            </div>
+                             {alojamiento.descripcion && (
+                                <div>
+                                    <strong>Descripción General:</strong>
+                                    <p className="text-muted-foreground">{alojamiento.descripcion}</p>
+                                </div>
+                             )}
+                             {alojamiento.reglas_casa && (
+                                 <div>
+                                    <strong>Reglas de la Casa:</strong>
+                                    <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
+                                </div>
+                             )}
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
