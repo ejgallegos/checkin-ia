@@ -266,10 +266,12 @@ export default function DashboardPage() {
                     <img src={qrCodeUrl[alojamiento.id]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
                   </div>
                 )}
-
-                <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full mt-4" size="lg" disabled={isGeneratingQR[alojamiento.id]}>
-                 {isGeneratingQR[alojamiento.id] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
-               </Button>
+                
+                <div className="mt-4">
+                  <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[alojamiento.id]}>
+                    {isGeneratingQR[alojamiento.id] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
+                  </Button>
+                </div>
              </CardContent>
            </Card>
         ))}
