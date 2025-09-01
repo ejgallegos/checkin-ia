@@ -173,6 +173,15 @@ export function DemoSection() {
           denominacion: values.nombreAlojamiento,
           tipo: values.tipoAlojamiento,
           capacidad: values.capacidad,
+          checkin: `${values.checkIn}:00`,
+          checkout: `${values.checkOut}:00`,
+          telefono: values.telefono,
+          ubicacion: values.ubicacion,
+          descripcion: values.descripcion,
+          politica_cancelacion: values.politicaCancelacion,
+          metodo_pago: values.metodosPago,
+          reglas_casa: values.reglasCasa,
+          usuario: registerData.user.id,
           Servicios: {
             wifi: values.amenities.wifi,
             cocina: values.amenities.cocina,
@@ -185,15 +194,6 @@ export function DemoSection() {
             bano_privado: values.amenities.bano_privado,
             mascotas: values.mascotas,
           },
-          checkin: `${values.checkIn}:00`,
-          checkout: `${values.checkOut}:00`,
-          telefono: values.telefono,
-          ubicacion: values.ubicacion,
-          descripcion: values.descripcion,
-          politica_cancelacion: values.politicaCancelacion,
-          metodo_pago: values.metodosPago,
-          reglas_casa: values.reglasCasa,
-          usuario: registerData.user.id,
         }
       };
       
