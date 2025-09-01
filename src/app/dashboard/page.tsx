@@ -159,7 +159,7 @@ export default function DashboardPage() {
                <Separator />
 
                 <Accordion type="single" collapsible className="w-full">
-                    {services && typeof services === 'object' && (
+                    {services && typeof services === 'object' && Object.values(services).some(v => v === true) && (
                         <AccordionItem value="item-1">
                             <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
                             <AccordionContent>
@@ -239,7 +239,7 @@ export default function DashboardPage() {
            </Card>
              );
             })}
-      </main>
+          </main>
       <Footer />
     </div>
   );
