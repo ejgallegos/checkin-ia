@@ -50,8 +50,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const [isGeneratingQR, setIsGeneratingQR] = useState<{[key: number]: boolean}>({});
-  const [qrCodeUrl, setQrCodeUrl] = useState<{[key: number]: string | null}>({});
+  const [isGeneratingQR, setIsGeneratingQR] = useState<{[key: string]: boolean}>({});
+  const [qrCodeUrl, setQrCodeUrl] = useState<{[key: string]: string | null}>({});
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -62,8 +62,8 @@ export default function DashboardPage() {
   const handleGenerateQR = async (alojamientoId: number, alojamientoNombre: string) => {
     if (!alojamientoNombre) return;
 
-    setIsGeneratingQR(prev => ({...prev, [alojamientoId]: true}));
-    setQrCodeUrl(prev => ({...prev, [alojamientoId]: null}));
+    setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: true}));
+    setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: null}));
 
     try {
       const encodedDenominacion = encodeURIComponent(alojamientoNombre);
@@ -76,10 +76,6 @@ export default function DashboardPage() {
           'accept': 'application/json',
         },
       });
-
-      if (response.status === 405) {
-        throw new Error("Method Not Allowed: Verifica la configuración de la API.");
-      }
       
       const data = await response.json();
 
@@ -88,7 +84,7 @@ export default function DashboardPage() {
       }
       
       if (data.base64) {
-        setQrCodeUrl(prev => ({...prev, [alojamientoId]: data.base64}));
+        setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: data.base64}));
         toast({
           title: "¡QR Generado!",
           description: "Escanea el código con tu app de WhatsApp para conectar.",
@@ -116,14 +112,14 @@ export default function DashboardPage() {
       }
 
     } catch (error) {
-      setQrCodeUrl(prev => ({...prev, [alojamientoId]: null}));
+      setQrCodeUrl(prev => ({...prev, [String(alojamientoId)]: null}));
       toast({
         title: "Error de Conexión",
         description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
-      setIsGeneratingQR(prev => ({...prev, [alojamientoId]: false}));
+      setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: false}));
     }
   };
 
@@ -178,7 +174,9 @@ export default function DashboardPage() {
             </Card>
         )}
 
-        {accommodations.map((alojamiento) => (
+        {accommodations.map((alojamiento) => {
+             const services = alojamiento.Servicios || alojamiento.servicios;
+             return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
              <CardHeader>
                <CardTitle className="flex items-center gap-2">{alojamiento.denominacion}
@@ -191,10 +189,10 @@ export default function DashboardPage() {
              <CardContent className="space-y-4">
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                 <p><strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>
-                 <p><strong>Ubicación:</strong> {alojamiento.ubicacion}</p>
-                 <p><strong>Teléfono:</strong> {alojamiento.telefono}</p>
-                 <p><strong>Método de Pago:</strong> {alojamiento.metodo_pago}</p>
+                 {alojamiento.capacidad && <p><strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
+                 {alojamiento.ubicacion && <p><strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
+                 {alojamiento.telefono && <p><strong>Teléfono:</strong> {alojamiento.telefono}</p>}
+                 {alojamiento.metodo_pago && <p><strong>Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
                </div>
                <Separator />
 
@@ -203,7 +201,7 @@ export default function DashboardPage() {
                         <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
                         <AccordionContent>
                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                            {alojamiento.Servicios && Object.entries(alojamiento.Servicios)
+                            {services && typeof services === 'object' && Object.entries(services)
                                 .filter(([key]) => key !== 'id' && serviceIcons[key])
                                 .map(([key, value]) => (
                                 <div key={key} className="flex items-center gap-2">
@@ -260,22 +258,22 @@ export default function DashboardPage() {
                     </AccordionItem>
                 </Accordion>
                 
-                {qrCodeUrl[alojamiento.id] && (
+                {qrCodeUrl[String(alojamiento.id)] && (
                   <div className="mt-6 text-center flex flex-col items-center">
                     <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
                     <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
-                    <img src={qrCodeUrl[alojamiento.id]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
+                    <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
                   </div>
                 )}
                 
                 <div className="mt-4">
-                  <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[alojamiento.id]}>
-                    {isGeneratingQR[alojamiento.id] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
+                  <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
+                    {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Generar QR de Conexión </>}
                   </Button>
                 </div>
              </CardContent>
            </Card>
-        ))}
+        )})}
 
       </main>
       <Footer />
