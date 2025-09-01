@@ -210,7 +210,13 @@ export function DemoSection() {
       
       if (!createAccommodationResponse.ok) {
           const errorData = await createAccommodationResponse.json();
-          throw new Error(errorData.error?.message || 'No se pudo crear el alojamiento.');
+          toast({
+            title: "Error al Crear Alojamiento",
+            description: errorData.error?.message || 'No se pudo crear el alojamiento. Contacta a soporte.',
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
       }
       
       const accommodationDataForState = {
