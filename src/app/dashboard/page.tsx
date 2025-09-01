@@ -135,7 +135,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
         ) : (
-            accommodations.map((alojamiento: Accommodation) => {
+            accommodations.map((alojamiento) => {
              if (!alojamiento || !alojamiento.attributes) return null;
              
              const { attributes } = alojamiento;
@@ -250,5 +250,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
