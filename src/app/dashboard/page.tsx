@@ -239,7 +239,7 @@ export default function DashboardPage() {
            </Card>
              );
             })}
-          </main>
+        </main>
       <Footer />
     </div>
   );
