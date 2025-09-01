@@ -34,8 +34,8 @@ const amenitiesSchema = z.object({
   aire_acondicionado: z.boolean().default(false),
   calefaccion: z.boolean().default(false),
   tv: z.boolean().default(false),
-  banoPrivado: z.boolean().default(false),
-  ropaDeCama: z.boolean().default(false),
+  bano_privado: z.boolean().default(false),
+  ropa_cama: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -84,8 +84,8 @@ const amenityItems = [
   { id: "aire_acondicionado", label: "Aire Acondicionado" },
   { id: "calefaccion", label: "Calefacción" },
   { id: "tv", label: "TV" },
-  { id: "banoPrivado", label: "Baño Privado" },
-  { id: "ropaDeCama", label: "Ropa de Cama" },
+  { id: "bano_privado", label: "Baño Privado" },
+  { id: "ropa_cama", label: "Ropa de Cama" },
 ] as const;
 
 export function DemoSection() {
@@ -115,8 +115,8 @@ export function DemoSection() {
         aire_acondicionado: false,
         calefaccion: false,
         tv: false,
-        banoPrivado: false,
-        ropaDeCama: false,
+        bano_privado: false,
+        ropa_cama: false,
       },
       checkIn: "15:00",
       checkOut: "11:00",
@@ -178,11 +178,11 @@ export function DemoSection() {
             cocina: values.amenities.cocina,
             aire_acondicionado: values.amenities.aire_acondicionado,
             estacionamiento: values.amenities.estacionamiento,
-            ropa_cama: values.amenities.ropaDeCama,
+            ropa_cama: values.amenities.ropa_cama,
             tv: values.amenities.tv,
             piscina: values.amenities.piscina,
             calefaccion: values.amenities.calefaccion,
-            bano_privado: values.amenities.banoPrivado,
+            bano_privado: values.amenities.bano_privado,
             mascotas: values.mascotas,
           },
           checkin: `${values.checkIn}:00`,
@@ -216,16 +216,17 @@ export function DemoSection() {
           setIsLoading(false);
           return;
       }
-
-      const accommodationDataForState = {
-        name: values.nombreAlojamiento,
-        description: values.descripcion,
-        amenities: `Capacidad para ${values.capacidad} personas. Tipo: ${values.tipoAlojamiento}. Servicios: ${Object.entries(values.amenities).filter(([, v]) => v).map(([k]) => amenityItems.find(i => i.id === k)?.label).join(', ')}. Mascotas: ${values.mascotas ? 'Sí' : 'No'}. Horario de Check-in: ${values.checkIn}. Horario de Check-out: ${values.checkOut}.`,
-        location: values.ubicacion,
-        contact: `Teléfono: ${values.telefono}`,
-      };
       
-      login(registerData.jwt, registerData.user, [accommodationDataForState]);
+      // Fetch the newly created accommodation to get all data for the state
+      const accommodationsResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos?filters[usuario][id][$eq]=${registerData.user.id}&populate=*`, {
+          headers: {
+              'Authorization': `Bearer ${registerData.jwt}`
+          }
+      });
+      const accommodationsData = await accommodationsResponse.json();
+      const userAccommodations = accommodationsData.data.map((item: any) => ({id: item.id, ...item.attributes}));
+
+      login(registerData.jwt, registerData.user, userAccommodations);
 
       toast({
         title: "¡Registro Exitoso!",
