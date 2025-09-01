@@ -74,7 +74,7 @@ export default function LoginPage() {
       });
       const accommodationsData = await accommodationsResponse.json();
       
-      const accommodations = accommodationsData.data.map((item: any) => ({id: item.id, ...item.attributes}));
+      const accommodations = accommodationsData.data;
 
       login(jwt, user, accommodations);
 

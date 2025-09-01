@@ -24,8 +24,7 @@ interface Services {
     mascotas: boolean;
 }
 
-interface Accommodation {
-    id: number;
+interface AccommodationAttributes {
     denominacion: string;
     tipo: string;
     capacidad: number;
@@ -39,6 +38,12 @@ interface Accommodation {
     reglas_casa: string;
     Servicios: Services;
 }
+
+interface Accommodation {
+    id: number;
+    attributes: AccommodationAttributes;
+}
+
 
 interface AuthContextType {
   user: User | null;
