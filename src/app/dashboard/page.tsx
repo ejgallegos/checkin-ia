@@ -75,6 +75,10 @@ export default function DashboardPage() {
         },
       });
 
+      if (response.status === 405) {
+        throw new Error("Method Not Allowed: Verifica la configuración de la API.");
+      }
+      
       const data = await response.json();
 
       if (!response.ok) {
