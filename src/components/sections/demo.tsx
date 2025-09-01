@@ -185,15 +185,15 @@ export function DemoSection() {
             bano_privado: values.amenities.banoPrivado,
             mascotas: values.mascotas,
           },
-          checkin: values.checkIn,
-          checkout: values.checkOut,
+          checkin: `${values.checkIn}:00`,
+          checkout: `${values.checkOut}:00`,
           telefono: values.telefono,
           ubicacion: values.ubicacion,
           descripcion: values.descripcion,
           politica_cancelacion: values.politicaCancelacion,
           metodo_pago: values.metodosPago,
           reglas_casa: values.reglasCasa,
-          owner: registerData.user.id,
+          usuario: registerData.user.id,
         }
       };
       
@@ -599,3 +599,5 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
