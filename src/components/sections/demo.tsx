@@ -224,7 +224,7 @@ export function DemoSection() {
           }
       });
       const accommodationsData = await accommodationsResponse.json();
-      const userAccommodations = accommodationsData.data.map((item: any) => ({id: item.id, ...item.attributes}));
+      const userAccommodations = accommodationsData.data;
 
       login(registerData.jwt, registerData.user, userAccommodations);
 
@@ -600,7 +600,5 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
 
     

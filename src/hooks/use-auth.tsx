@@ -39,7 +39,7 @@ interface AccommodationAttributes {
     Servicios: Services;
 }
 
-interface Accommodation {
+export interface Accommodation {
     id: number;
     attributes: AccommodationAttributes;
 }
@@ -70,12 +70,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = localStorage.getItem('user');
       const storedAccommodations = localStorage.getItem('accommodations');
 
-      if (storedToken && storedUser) {
+      if (storedToken && storedUser && storedAccommodations) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        if (storedAccommodations) {
-          setAccommodations(JSON.parse(storedAccommodations));
-        }
+        setAccommodations(JSON.parse(storedAccommodations));
       }
     } catch (error) {
       console.error("Failed to parse auth data from localStorage", error);
@@ -122,3 +120,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    

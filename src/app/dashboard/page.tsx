@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import type { Accommodation } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -134,9 +135,10 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
         ) : (
-            accommodations.map((alojamiento) => {
+            accommodations.map((alojamiento: Accommodation) => {
              if (!alojamiento || !alojamiento.attributes) return null;
-             const attributes = alojamiento.attributes;
+             
+             const { attributes } = alojamiento;
              const services = attributes.Servicios || {};
              const availableServices = Object.entries(services)
                 .filter(([key, value]) => value === true && serviceIcons[key]);
@@ -248,3 +250,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
