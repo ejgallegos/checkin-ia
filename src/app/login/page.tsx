@@ -66,15 +66,15 @@ export default function LoginPage() {
 
       const { jwt, user } = loginData;
 
-      // Asumiendo que hay un endpoint para obtener alojamientos por usuario
-      const accommodationsResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos?filters[owner][id][$eq]=${user.id}`, {
+      // Usar el endpoint correcto para obtener alojamientos por usuario con populate
+      const accommodationsResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos?filters[usuario][id][$eq]=${user.id}&populate=*`, {
           headers: {
               'Authorization': `Bearer ${jwt}`
           }
       });
       const accommodationsData = await accommodationsResponse.json();
       
-      const accommodations = accommodationsData.data.map((item: any) => item.attributes);
+      const accommodations = accommodationsData.data.map((item: any) => ({id: item.id, ...item.attributes}));
 
       login(jwt, user, accommodations);
 

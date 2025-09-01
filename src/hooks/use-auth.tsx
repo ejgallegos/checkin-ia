@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
@@ -9,12 +10,34 @@ interface User {
   email: string;
 }
 
+interface Services {
+    id: number;
+    wifi: boolean;
+    cocina: boolean;
+    aire_acondicionado: boolean;
+    estacionamiento: boolean;
+    ropa_cama: boolean;
+    tv: boolean;
+    piscina: boolean;
+    calefaccion: boolean;
+    bano_privado: boolean;
+    mascotas: boolean;
+}
+
 interface Accommodation {
-    name: string;
-    description: string;
-    amenities: string;
-    location: string;
-    contact: string;
+    id: number;
+    denominacion: string;
+    tipo: string;
+    capacidad: number;
+    checkin: string;
+    checkout: string;
+    telefono: string;
+    ubicacion: string;
+    descripcion: string;
+    politica_cancelacion: string;
+    metodo_pago: string;
+    reglas_casa: string;
+    Servicios: Services;
 }
 
 interface AuthContextType {
