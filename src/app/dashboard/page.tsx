@@ -239,7 +239,8 @@ export default function DashboardPage() {
              </CardContent>
            </Card>
              );
-            })}
+            })
+        )}
         </main>
       <Footer />
     </div>
