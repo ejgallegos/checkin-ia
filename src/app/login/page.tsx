@@ -83,6 +83,8 @@ export default function LoginPage() {
         description: "Serás redirigido a tu panel.",
       });
 
+      router.push('/dashboard');
+
     } catch (error) {
       toast({
         title: "Error de Inicio de Sesión",
