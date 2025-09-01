@@ -198,7 +198,7 @@ export default function DashboardPage() {
                         <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
                         <AccordionContent>
                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                            {Object.entries(alojamiento.Servicios)
+                            {alojamiento.Servicios && Object.entries(alojamiento.Servicios)
                                 .filter(([key]) => key !== 'id' && serviceIcons[key])
                                 .map(([key, value]) => (
                                 <div key={key} className="flex items-center gap-2">
