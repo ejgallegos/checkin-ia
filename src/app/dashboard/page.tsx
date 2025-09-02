@@ -115,7 +115,7 @@ export default function DashboardPage() {
       <Header />
       <main className="flex-grow container max-w-4xl mx-auto py-12">
         <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold">Hola, {user?.username}!</h1>
+            <h1 className="text-3xl md:text-4xl font-bold">👋 ¡Hola, {user?.username}!</h1>
             <Button variant="outline" onClick={logout}>
                 <LogOut className="mr-2"/>
                 Cerrar Sesión
@@ -146,7 +146,7 @@ export default function DashboardPage() {
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
              <CardHeader>
-               <CardTitle className="flex items-center gap-2">{alojamiento.denominacion}
+               <CardTitle className="flex items-center gap-2">🏨 {alojamiento.denominacion}
                 {alojamiento.tipo && (
                     <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
                         - {accommodationTypeIcons[alojamiento.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {alojamiento.tipo}
@@ -158,10 +158,10 @@ export default function DashboardPage() {
              <CardContent className="space-y-4">
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                 {alojamiento.capacidad && <p><strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
-                 {alojamiento.ubicacion && <p><strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
-                 {alojamiento.telefono && <p><strong>Teléfono:</strong> {alojamiento.telefono}</p>}
-                 {alojamiento.metodo_pago && <p><strong>Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
+                 {alojamiento.capacidad && <p><strong>👥 Capacidad:</strong> {alojamiento.capacidad} personas</p>}
+                 {alojamiento.ubicacion && <p><strong>📍 Ubicación:</strong> {alojamiento.ubicacion}</p>}
+                 {alojamiento.telefono && <p><strong>📞 Teléfono:</strong> {alojamiento.telefono}</p>}
+                 {alojamiento.metodo_pago && <p><strong>💳 Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
                </div>
                <Separator />
 
@@ -213,13 +213,13 @@ export default function DashboardPage() {
                         <AccordionContent className="space-y-4">
                              {alojamiento.descripcion && (
                                 <div>
-                                    <strong>Descripción General:</strong>
+                                    <strong>📝 Descripción General:</strong>
                                     <p className="text-muted-foreground">{alojamiento.descripcion}</p>
                                 </div>
                              )}
                              {alojamiento.reglas_casa && (
                                  <div>
-                                    <strong>Reglas de la Casa:</strong>
+                                    <strong>📜 Reglas de la Casa:</strong>
                                     <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
                                 </div>
                              )}
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                 <div className="mt-6 text-center flex flex-col items-center">
                     {qrCodeUrl[String(alojamiento.id)] ? (
                       <>
-                        <h4 className="font-semibold mb-2">¡Conexión Lista!</h4>
+                        <h4 className="font-semibold mb-2">✨ ¡Conexión Lista!</h4>
                         <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
                         <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
                       </>
@@ -250,3 +250,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
