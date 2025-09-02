@@ -140,8 +140,9 @@ export default function DashboardPage() {
              
              const { attributes } = alojamiento;
              const services = attributes.Servicios || {};
-             const availableServices = Object.entries(services)
-                .filter(([key, value]) => value === true && serviceIcons[key]);
+             const availableServices = Object.keys(serviceIcons).filter(
+                (key) => services && services[key as keyof typeof services] === true
+             );
 
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
@@ -171,7 +172,7 @@ export default function DashboardPage() {
                             <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
                             <AccordionContent>
                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                                {availableServices.map(([key]) => (
+                                {availableServices.map((key) => (
                                     <div key={key} className="flex items-center gap-2">
                                         {serviceIcons[key]}
                                         <span>{serviceLabels[key]}</span>
