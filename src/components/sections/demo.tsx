@@ -197,7 +197,7 @@ export function DemoSection() {
         }
       };
       
-      const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/alojamientos', {
+      const createAccommodationResponse = await fetch('https://db.turismovillaunion.gob.ar/api/alojamientos?populate=*', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -206,8 +206,10 @@ export function DemoSection() {
         body: JSON.stringify(accommodationDataForApi)
       });
       
+      const accommodationResponseData = await createAccommodationResponse.json();
+
       if (!createAccommodationResponse.ok) {
-          const errorData = await createAccommodationResponse.json();
+          const errorData = accommodationResponseData;
           toast({
             title: "Error al Crear Alojamiento",
             description: errorData.error?.message || 'No se pudo crear el alojamiento. Contacta a soporte.',
@@ -217,16 +219,34 @@ export function DemoSection() {
           return;
       }
       
-      // Fetch the newly created accommodation to get all data for the state
-      const accommodationsResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos?filters[usuario][id][$eq]=${registerData.user.id}&populate=*`, {
-          headers: {
-              'Authorization': `Bearer ${registerData.jwt}`
-          }
-      });
-      const accommodationsData = await accommodationsResponse.json();
-      const userAccommodations = accommodationsData.data;
+      const newlyCreatedAccommodation = accommodationResponseData.data;
 
-      login(registerData.jwt, registerData.user, userAccommodations);
+      // Create Evolution API instance
+      const evolutionApiResponse = await fetch('https://evolution.gali.com.ar/instance/create', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'evolution_api_69976825'
+          },
+          body: JSON.stringify({
+              instanceName: values.nombreAlojamiento,
+              integration: "WHATSAPP-BAILEYS",
+              token: newlyCreatedAccommodation.documentId,
+              number: `+54${values.telefono}`
+          })
+      });
+
+      if (!evolutionApiResponse.ok) {
+          console.error("Failed to create Evolution API instance");
+          // We can show a toast, but we don't stop the login flow
+           toast({
+            title: "Atención: Falló la conexión con WhatsApp",
+            description: "Tu cuenta fue creada, pero no pudimos crear la instancia de WhatsApp. Podrás generarla desde tu panel.",
+            variant: "destructive",
+          });
+      }
+
+      login(registerData.jwt, registerData.user, [newlyCreatedAccommodation]);
 
       toast({
         title: "¡Registro Exitoso!",
@@ -606,5 +626,4 @@ export function DemoSection() {
   );
 }
 
-    
     
