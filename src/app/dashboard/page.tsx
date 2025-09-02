@@ -150,13 +150,19 @@ export default function DashboardPage() {
             throw new Error(errorDetails);
         }
         
-        const updatedAccommodationData = responseData.data;
+        const updatedAccommodationFromApi = responseData.data;
 
-        const updatedAccommodations = accommodations.map(acc => 
-            acc.id === updatedAccommodationData.id ? updatedAccommodationData : acc
+        // Create the new full accommodation object with the updated attributes
+        const updatedAccommodationData = {
+          ...editingAccommodation,
+          ...updatedAccommodationFromApi,
+        };
+
+        const updatedAccommodationsList = accommodations.map(acc => 
+            acc.documentId === editingAccommodation.documentId ? updatedAccommodationData : acc
         );
         
-        login(token!, user!, updatedAccommodations);
+        login(token!, user!, updatedAccommodationsList);
 
         toast({
             title: "¡Alojamiento Actualizado!",
@@ -272,7 +278,7 @@ export default function DashboardPage() {
                        </CardTitle>
                        <CardDescription>Gestiona la conexión de IA y los datos de este alojamiento.</CardDescription>
                    </div>
-                   <Dialog open={!!editingAccommodation && editingAccommodation.id === alojamiento.id} onOpenChange={(isOpen) => !isOpen && setEditingAccommodation(null)}>
+                   <Dialog open={!!editingAccommodation && editingAccommodation.documentId === alojamiento.documentId} onOpenChange={(isOpen) => !isOpen && setEditingAccommodation(null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" onClick={() => handleEditClick(alojamiento)}>
                                 <Pencil className="mr-2 h-4 w-4" /> Editar
