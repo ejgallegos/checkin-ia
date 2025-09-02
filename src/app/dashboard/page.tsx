@@ -134,7 +134,7 @@ export default function DashboardPage() {
     };
     
     try {
-        const response = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${editingAccommodation.documentId}`, {
+        const response = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${editingAccommodation.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -151,10 +151,13 @@ export default function DashboardPage() {
         }
         
         // Strapi returns { data: { id, attributes: {...} } } on PUT, so we need to adjust
-        const updatedAccommodationData = { id: responseData.data.id, ...responseData.data.attributes };
+        const updatedAccommodationData = {
+          ...responseData.data.attributes,
+          id: responseData.data.id,
+        };
 
         const updatedAccommodations = accommodations.map(acc => 
-            acc.id === editingAccommodation.id ? updatedAccommodationData : acc
+            acc.id === updatedAccommodationData.id ? updatedAccommodationData : acc
         );
         
         login(token!, user!, updatedAccommodations);
@@ -467,5 +470,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
