@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -134,7 +134,7 @@ export default function DashboardPage() {
     };
     
     try {
-        const response = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${editingAccommodation.id}`, {
+        const response = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${editingAccommodation.documentId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -375,10 +375,10 @@ export default function DashboardPage() {
              <CardContent className="space-y-4">
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                 {alojamiento.capacidad && <p><strong>👥 Capacidad:</strong> {alojamiento.capacidad} personas</p>}
-                 {alojamiento.ubicacion && <p><strong>📍 Ubicación:</strong> {alojamiento.ubicacion}</p>}
-                 {alojamiento.telefono && <p><strong>📞 Teléfono:</strong> {alojamiento.telefono}</p>}
-                 {alojamiento.metodo_pago && <p><strong>💳 Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
+                 {alojamiento.capacidad && <p className="flex items-center gap-2">👥 <strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
+                 {alojamiento.ubicacion && <p className="flex items-center gap-2">📍 <strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
+                 {alojamiento.telefono && <p className="flex items-center gap-2">📞 <strong>Teléfono:</strong> {alojamiento.telefono}</p>}
+                 {alojamiento.metodo_pago && <p className="flex items-center gap-2">💳 <strong>Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
                </div>
                <Separator />
 

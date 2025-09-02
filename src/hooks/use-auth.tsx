@@ -26,6 +26,7 @@ interface Services {
 
 export interface Accommodation {
     id: number;
+    documentId: string;
     denominacion: string;
     tipo: string;
     capacidad: number;
@@ -116,3 +117,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
