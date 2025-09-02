@@ -112,24 +112,24 @@ export default function DashboardPage() {
     if (!editingAccommodation) return;
     setIsUpdating(true);
 
-    const {
-      id,
-      documentId,
-      createdAt,
-      updatedAt,
-      publishedAt,
-      usuario,
-      ...restOfData
-    } = JSON.parse(JSON.stringify(editingAccommodation));
+    const dataToUpdate = JSON.parse(JSON.stringify(editingAccommodation));
 
-    if (restOfData.Servicios && restOfData.Servicios.id) {
-        delete restOfData.Servicios.id;
+    // Remove all fields that Strapi manages and shouldn't be in the PUT request body
+    delete dataToUpdate.id;
+    delete dataToUpdate.documentId;
+    delete dataToUpdate.createdAt;
+    delete dataToUpdate.updatedAt;
+    delete dataToUpdate.publishedAt;
+    delete dataToUpdate.usuario; // This is crucial
+
+    if (dataToUpdate.Servicios && dataToUpdate.Servicios.id) {
+        delete dataToUpdate.Servicios.id;
     }
 
     const accommodationDataForApi = {
         data: {
-          ...restOfData,
-          capacidad: Number(restOfData.capacidad),
+          ...dataToUpdate,
+          capacidad: Number(dataToUpdate.capacidad),
         }
     };
     
@@ -150,8 +150,11 @@ export default function DashboardPage() {
             throw new Error(errorDetails);
         }
         
+        // Strapi returns { data: { id, attributes: {...} } } on PUT, so we need to adjust
+        const updatedAccommodationData = { id: responseData.data.id, ...responseData.data.attributes };
+
         const updatedAccommodations = accommodations.map(acc => 
-            acc.id === editingAccommodation.id ? { ...responseData.data.attributes, id: responseData.data.id } : acc
+            acc.id === editingAccommodation.id ? updatedAccommodationData : acc
         );
         
         login(token!, user!, updatedAccommodations);
@@ -464,3 +467,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
