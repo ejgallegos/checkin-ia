@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, Key, Mail, HomeIcon, Bed, Wallet, FileText, Ban, Waypoints, Tag } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -82,7 +82,7 @@ export default function DashboardPage() {
   }, [isAuthenticated, authLoading, router]);
   
   const handleEditClick = (accommodation: Accommodation) => {
-    setEditingAccommodation({...accommodation});
+    setEditingAccommodation(JSON.parse(JSON.stringify(accommodation))); // Deep copy
   };
 
   const handleFormFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -95,13 +95,11 @@ export default function DashboardPage() {
   };
 
   const handleServiceChange = (serviceName: string, checked: boolean) => {
-     if (!editingAccommodation || !editingAccommodation.Servicios) return;
+     if (!editingAccommodation) return;
+     const updatedServices = { ...editingAccommodation.Servicios, [serviceName]: checked };
      setEditingAccommodation({
         ...editingAccommodation,
-        Servicios: {
-            ...editingAccommodation.Servicios,
-            [serviceName]: checked,
-        }
+        Servicios: updatedServices
      });
   };
   
@@ -114,21 +112,28 @@ export default function DashboardPage() {
     if (!editingAccommodation) return;
     setIsUpdating(true);
 
+    // Create a deep copy and remove properties that the API might reject
+    const accommodationToUpdate = JSON.parse(JSON.stringify(editingAccommodation));
+
+    const {
+      id,
+      createdAt,
+      updatedAt,
+      publishedAt,
+      documentId,
+      usuario,
+      ...restOfData
+    } = accommodationToUpdate;
+    
+    // Also remove id from nested services object if it exists
+    if (restOfData.Servicios && restOfData.Servicios.id) {
+        delete restOfData.Servicios.id;
+    }
+
     const accommodationDataForApi = {
         data: {
-          denominacion: editingAccommodation.denominacion,
-          capacidad: Number(editingAccommodation.capacidad),
-          checkin: editingAccommodation.checkin,
-          checkout: editingAccommodation.checkout,
-          telefono: editingAccommodation.telefono,
-          ubicacion: editingAccommodation.ubicacion,
-          descripcion: editingAccommodation.descripcion,
-          politica_cancelacion: editingAccommodation.politica_cancelacion,
-          metodo_pago: editingAccommodation.metodo_pago,
-          reglas_casa: editingAccommodation.reglas_casa,
-          Servicios: {
-            ...editingAccommodation.Servicios
-          },
+          ...restOfData,
+          capacidad: Number(restOfData.capacidad),
         }
     };
     
@@ -141,16 +146,15 @@ export default function DashboardPage() {
             },
             body: JSON.stringify(accommodationDataForApi)
         });
+        
+        const responseData = await response.json();
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'No se pudo actualizar el alojamiento.');
+            throw new Error(responseData.error?.message || 'No se pudo actualizar el alojamiento.');
         }
         
-        const updatedData = await response.json();
-
         const updatedAccommodations = accommodations.map(acc => 
-            acc.id === editingAccommodation.id ? { ...acc, ...updatedData.data.attributes, id: updatedData.data.id } : acc
+            acc.id === editingAccommodation.id ? { ...acc, ...responseData.data.attributes, id: responseData.data.id } : acc
         );
         
         login(token!, user!, updatedAccommodations);
@@ -320,18 +324,18 @@ export default function DashboardPage() {
                                             <Label className="text-base">¿Se aceptan mascotas?</Label>
                                         </div>
                                         <Switch
-                                          checked={editingAccommodation.Servicios?.mascotas || false}
+                                          checked={!!editingAccommodation.Servicios?.mascotas}
                                           onCheckedChange={handleMascotasChange}
                                         />
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="checkin">⏰ Hora de Check-in</Label>
-                                            <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin.substring(0,5)} onChange={handleFormFieldChange} className="bg-white" />
+                                            <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin ? editingAccommodation.checkin.substring(0,5) : ''} onChange={handleFormFieldChange} className="bg-white" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="checkout">⏰ Hora de Check-out</Label>
-                                            <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout.substring(0,5)} onChange={handleFormFieldChange} className="bg-white" />
+                                            <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout ? editingAccommodation.checkout.substring(0,5) : ''} onChange={handleFormFieldChange} className="bg-white" />
                                         </div>
                                     </div>
                                      <div className="space-y-2">
