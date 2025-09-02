@@ -93,6 +93,19 @@ export default function DashboardPage() {
         [name]: value
     });
   };
+  
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editingAccommodation) return;
+    const { value } = e.target;
+    // Allow only numbers
+    if (/^\d*$/.test(value)) {
+       setEditingAccommodation({
+           ...editingAccommodation,
+           telefono: `+54${value}`
+       });
+    }
+  };
+
 
   const handleServiceChange = (serviceName: string, checked: boolean) => {
      if (!editingAccommodation) return;
@@ -125,10 +138,17 @@ export default function DashboardPage() {
     if (dataToUpdate.Servicios && dataToUpdate.Servicios.id) {
         delete dataToUpdate.Servicios.id;
     }
+    
+    // Ensure telefono is sent correctly, even if it wasn't modified
+    let finalPhoneNumber = dataToUpdate.telefono;
+    if (!finalPhoneNumber.startsWith('+54')) {
+        finalPhoneNumber = `+54${finalPhoneNumber}`;
+    }
 
     const accommodationDataForApi = {
         data: {
           ...dataToUpdate,
+          telefono: finalPhoneNumber,
           capacidad: Number(dataToUpdate.capacidad),
         }
     };
@@ -304,7 +324,18 @@ export default function DashboardPage() {
                                          </div>
                                           <div className="space-y-2">
                                              <Label htmlFor="telefono">Teléfono</Label>
-                                             <Input id="telefono" name="telefono" value={editingAccommodation.telefono} onChange={handleFormFieldChange} className="bg-white" />
+                                              <div className="flex items-center">
+                                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-secondary text-muted-foreground text-sm">
+                                                  +54
+                                                </span>
+                                                <Input 
+                                                  id="telefono" 
+                                                  name="telefono"
+                                                  value={editingAccommodation.telefono.startsWith('+54') ? editingAccommodation.telefono.substring(3) : editingAccommodation.telefono}
+                                                  onChange={handlePhoneNumberChange} 
+                                                  className="bg-white rounded-l-none" 
+                                                />
+                                              </div>
                                          </div>
                                      </div>
                                      <div className="space-y-2">
@@ -482,3 +513,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

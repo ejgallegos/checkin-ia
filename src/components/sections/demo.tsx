@@ -61,7 +61,7 @@ const formSchema = z.object({
   checkOut: z.string().min(1, "La hora de check-out es requerida."),
   mascotas: z.boolean().default(false),
   reglasCasa: z.string().optional(),
-  telefono: z.string().min(8, "Ingresa un teléfono válido."),
+  telefono: z.string().min(8, "Ingresa un número de al menos 8 dígitos.").max(15, "El número no puede tener más de 15 dígitos."),
   ubicacion: z.string().min(3, "La ubicación es requerida."),
   descripcion: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
 });
@@ -175,7 +175,7 @@ export function DemoSection() {
           capacidad: values.capacidad,
           checkin: `${values.checkIn}:00`,
           checkout: `${values.checkOut}:00`,
-          telefono: values.telefono,
+          telefono: `+54${values.telefono}`,
           ubicacion: values.ubicacion,
           descripcion: values.descripcion,
           politica_cancelacion: values.politicaCancelacion,
@@ -527,9 +527,14 @@ export function DemoSection() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
-                              <FormControl>
-                                <Input type="tel" placeholder="Ej: +54 9 299 1234567" {...field} disabled={isLoading}/>
-                              </FormControl>
+                              <div className="flex items-center">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-secondary text-muted-foreground text-sm">
+                                  +54
+                                </span>
+                                <FormControl>
+                                  <Input type="tel" placeholder="92991234567" {...field} disabled={isLoading} className="rounded-l-none" />
+                                </FormControl>
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -601,4 +606,5 @@ export function DemoSection() {
   );
 }
 
+    
     
