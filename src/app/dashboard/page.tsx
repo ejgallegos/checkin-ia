@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -112,20 +112,16 @@ export default function DashboardPage() {
     if (!editingAccommodation) return;
     setIsUpdating(true);
 
-    // Create a deep copy and remove properties that the API might reject
-    const accommodationToUpdate = JSON.parse(JSON.stringify(editingAccommodation));
-
     const {
       id,
+      documentId,
       createdAt,
       updatedAt,
       publishedAt,
-      documentId,
       usuario,
       ...restOfData
-    } = accommodationToUpdate;
-    
-    // Also remove id from nested services object if it exists
+    } = JSON.parse(JSON.stringify(editingAccommodation));
+
     if (restOfData.Servicios && restOfData.Servicios.id) {
         delete restOfData.Servicios.id;
     }
@@ -150,11 +146,12 @@ export default function DashboardPage() {
         const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error(responseData.error?.message || 'No se pudo actualizar el alojamiento.');
+            const errorDetails = responseData.error?.details?.key ? `Error en el campo: ${responseData.error.details.key}` : responseData.error?.message || 'No se pudo actualizar el alojamiento.';
+            throw new Error(errorDetails);
         }
         
         const updatedAccommodations = accommodations.map(acc => 
-            acc.id === editingAccommodation.id ? { ...acc, ...responseData.data.attributes, id: responseData.data.id } : acc
+            acc.id === editingAccommodation.id ? { ...responseData.data.attributes, id: responseData.data.id } : acc
         );
         
         login(token!, user!, updatedAccommodations);
@@ -242,12 +239,12 @@ export default function DashboardPage() {
         {!accommodations || accommodations.length === 0 ? (
             <Card className="shadow-lg text-center">
                 <CardHeader>
-                    <CardTitle>No tienes alojamientos registrados</CardTitle>
+                    <CardTitle>🤷‍♂️ No tienes alojamientos registrados</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p>Parece que aún no has añadido ningún alojamiento a tu cuenta.</p>
                     <Button asChild className="mt-4">
-                        <a href="/#demo">Registra tu Primer Alojamiento</a>
+                        <a href="/#demo">🚀 Registra tu Primer Alojamiento</a>
                     </Button>
                 </CardContent>
             </Card>
@@ -467,5 +464,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
