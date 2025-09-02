@@ -9,11 +9,18 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
 
 const serviceIcons: { [key: string]: JSX.Element } = {
   wifi: <Wifi className="w-5 h-5 text-primary" />,
@@ -39,6 +46,19 @@ const serviceLabels: { [key: string]: string } = {
     mascotas: "Acepta Mascotas",
 };
 
+const amenityItems = [
+  { id: "wifi", label: "WiFi" },
+  { id: "estacionamiento", label: "Estacionamiento" },
+  { id: "cocina", label: "Cocina" },
+  { id: "piscina", label: "Piscina" },
+  { id: "aire_acondicionado", label: "Aire Acondicionado" },
+  { id: "calefaccion", label: "Calefacción" },
+  { id: "tv", label: "TV" },
+  { id: "bano_privado", label: "Baño Privado" },
+  { id: "ropa_cama", label: "Ropa de Cama" },
+] as const;
+
+
 const accommodationTypeIcons: { [key: string]: JSX.Element } = {
     departamento: <Building className="w-5 h-5 text-muted-foreground" />,
     cabaña: <Home className="w-5 h-5 text-muted-foreground" />,
@@ -46,18 +66,110 @@ const accommodationTypeIcons: { [key: string]: JSX.Element } = {
 };
 
 export default function DashboardPage() {
-  const { user, accommodations, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user, accommodations, isAuthenticated, isLoading: authLoading, logout, token, login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
   const [isGeneratingQR, setIsGeneratingQR] = useState<{[key: string]: boolean}>({});
   const [qrCodeUrl, setQrCodeUrl] = useState<{[key: string]: string | null}>({});
+  const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isAuthenticated, authLoading, router]);
+  
+  const handleEditClick = (accommodation: Accommodation) => {
+    setEditingAccommodation({...accommodation});
+  };
+
+  const handleFormFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (!editingAccommodation) return;
+    setEditingAccommodation({
+        ...editingAccommodation,
+        [e.target.name]: e.target.value
+    });
+  };
+
+  const handleServiceChange = (serviceName: string, checked: boolean) => {
+     if (!editingAccommodation) return;
+     setEditingAccommodation({
+        ...editingAccommodation,
+        Servicios: {
+            ...editingAccommodation.Servicios,
+            [serviceName]: checked,
+        }
+     });
+  };
+  
+  const handleMascotasChange = (checked: boolean) => {
+      if (!editingAccommodation) return;
+      handleServiceChange("mascotas", checked);
+  };
+  
+  const handleUpdateAccommodation = async () => {
+    if (!editingAccommodation) return;
+    setIsUpdating(true);
+
+    const accommodationDataForApi = {
+        data: {
+          denominacion: editingAccommodation.denominacion,
+          capacidad: editingAccommodation.capacidad,
+          checkin: editingAccommodation.checkin,
+          checkout: editingAccommodation.checkout,
+          telefono: editingAccommodation.telefono,
+          ubicacion: editingAccommodation.ubicacion,
+          descripcion: editingAccommodation.descripcion,
+          politica_cancelacion: editingAccommodation.politica_cancelacion,
+          metodo_pago: editingAccommodation.metodo_pago,
+          reglas_casa: editingAccommodation.reglas_casa,
+          Servicios: {
+            ...editingAccommodation.Servicios
+          },
+        }
+    };
+    
+    try {
+        const response = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${editingAccommodation.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(accommodationDataForApi)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'No se pudo actualizar el alojamiento.');
+        }
+
+        const updatedAccommodations = accommodations.map(acc => 
+            acc.id === editingAccommodation.id ? editingAccommodation : acc
+        );
+        
+        // This is a bit of a hack, we should probably have a dedicated update function in useAuth
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        login(token!, storedUser, updatedAccommodations);
+
+        toast({
+            title: "¡Alojamiento Actualizado!",
+            description: "Los datos se guardaron correctamente.",
+        });
+        setEditingAccommodation(null);
+    } catch (error) {
+        toast({
+            title: "Error al Actualizar",
+            description: (error as Error).message,
+            variant: "destructive",
+        });
+    } finally {
+        setIsUpdating(false);
+    }
+  };
+
 
   const handleGenerateQR = async (alojamientoId: number, alojamientoNombre: string) => {
     setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: true}));
@@ -145,16 +257,116 @@ export default function DashboardPage() {
 
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
-             <CardHeader>
-               <CardTitle className="flex items-center gap-2">🏨 {alojamiento.denominacion}
-                {alojamiento.tipo && (
-                    <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
-                        - {accommodationTypeIcons[alojamiento.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {alojamiento.tipo}
-                    </span>
-                )}
-               </CardTitle>
-               <CardDescription>Gestiona la conexión de IA para este alojamiento.</CardDescription>
-             </CardHeader>
+                <CardHeader className="flex flex-row items-start justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">🏨 {alojamiento.denominacion}
+                        {alojamiento.tipo && (
+                            <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
+                                - {accommodationTypeIcons[alojamiento.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {alojamiento.tipo}
+                            </span>
+                        )}
+                       </CardTitle>
+                       <CardDescription>Gestiona la conexión de IA y los datos de este alojamiento.</CardDescription>
+                   </div>
+                   <Dialog open={!!editingAccommodation && editingAccommodation.id === alojamiento.id} onOpenChange={(isOpen) => !isOpen && setEditingAccommodation(null)}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" onClick={() => handleEditClick(alojamiento)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Editar
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle>✏️ Editando: {editingAccommodation?.denominacion}</DialogTitle>
+                            </DialogHeader>
+                            {editingAccommodation && (
+                               <div className="space-y-6 py-4">
+                                    {/* Form Fields */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="denominacion">Nombre del Alojamiento</Label>
+                                        <Input id="denominacion" name="denominacion" value={editingAccommodation.denominacion} onChange={handleFormFieldChange} />
+                                    </div>
+                                     <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="capacidad">Capacidad</Label>
+                                            <Input id="capacidad" name="capacidad" type="number" value={editingAccommodation.capacidad} onChange={handleFormFieldChange} />
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="telefono">Teléfono</Label>
+                                            <Input id="telefono" name="telefono" value={editingAccommodation.telefono} onChange={handleFormFieldChange} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="descripcion">📝 Descripción General</Label>
+                                        <Textarea id="descripcion" name="descripcion" value={editingAccommodation.descripcion} onChange={handleFormFieldChange} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>✔️ Servicios Incluidos</Label>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-md border p-4">
+                                            {amenityItems.map((item) => (
+                                              <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                <Checkbox
+                                                  id={`edit-${item.id}`}
+                                                  checked={editingAccommodation.Servicios?.[item.id as keyof typeof editingAccommodation.Servicios] || false}
+                                                  onCheckedChange={(checked) => handleServiceChange(item.id, !!checked)}
+                                                />
+                                                <Label htmlFor={`edit-${item.id}`} className="font-normal">{item.label}</Label>
+                                              </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-base">¿Se aceptan mascotas?</Label>
+                                        </div>
+                                        <Switch
+                                          checked={editingAccommodation.Servicios?.mascotas || false}
+                                          onCheckedChange={handleMascotasChange}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="checkin">⏰ Hora de Check-in</Label>
+                                            <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin.substring(0,5)} onChange={handleFormFieldChange} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="checkout">⏰ Hora de Check-out</Label>
+                                            <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout.substring(0,5)} onChange={handleFormFieldChange} />
+                                        </div>
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="politica_cancelacion">ℹ️ Política de Cancelación</Label>
+                                        <Textarea id="politica_cancelacion" name="politica_cancelacion" value={editingAccommodation.politica_cancelacion} onChange={handleFormFieldChange} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="reglas_casa">📜 Reglas de la Casa</Label>
+                                        <Textarea id="reglas_casa" name="reglas_casa" value={editingAccommodation.reglas_casa} onChange={handleFormFieldChange} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metodo_pago">💳 Método de Pago</Label>
+                                        <Input id="metodo_pago" name="metodo_pago" value={editingAccommodation.metodo_pago} onChange={handleFormFieldChange} />
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="ubicacion">📍 Ubicación (Coordenadas)</Label>
+                                        <div className="flex gap-2">
+                                            <Input id="ubicacion" name="ubicacion" value={editingAccommodation.ubicacion} onChange={handleFormFieldChange} />
+                                             <Button type="button" variant="outline" size="icon" onClick={() => window.open('https://maps.google.com', '_blank')}>
+                                                <Map className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                               </div>
+                            )}
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="outline">Cancelar</Button>
+                                </DialogClose>
+                                <Button onClick={handleUpdateAccommodation} disabled={isUpdating}>
+                                    {isUpdating ? <Loader className="animate-spin" /> : "Guardar Cambios"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </CardHeader>
              <CardContent className="space-y-4">
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -249,6 +461,5 @@ export default function DashboardPage() {
       <Footer />
     </div>
   );
-}
 
     
