@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, Key, Mail, HomeIcon, Bed, Wallet, FileText, Ban, Waypoints, Tag } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -87,14 +87,15 @@ export default function DashboardPage() {
 
   const handleFormFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!editingAccommodation) return;
+    const { name, value } = e.target;
     setEditingAccommodation({
         ...editingAccommodation,
-        [e.target.name]: e.target.value
+        [name]: value
     });
   };
 
   const handleServiceChange = (serviceName: string, checked: boolean) => {
-     if (!editingAccommodation) return;
+     if (!editingAccommodation || !editingAccommodation.Servicios) return;
      setEditingAccommodation({
         ...editingAccommodation,
         Servicios: {
@@ -116,7 +117,7 @@ export default function DashboardPage() {
     const accommodationDataForApi = {
         data: {
           denominacion: editingAccommodation.denominacion,
-          capacidad: editingAccommodation.capacidad,
+          capacidad: Number(editingAccommodation.capacidad),
           checkin: editingAccommodation.checkin,
           checkout: editingAccommodation.checkout,
           telefono: editingAccommodation.telefono,
@@ -145,14 +146,14 @@ export default function DashboardPage() {
             const errorData = await response.json();
             throw new Error(errorData.error?.message || 'No se pudo actualizar el alojamiento.');
         }
+        
+        const updatedData = await response.json();
 
         const updatedAccommodations = accommodations.map(acc => 
-            acc.id === editingAccommodation.id ? editingAccommodation : acc
+            acc.id === editingAccommodation.id ? { ...acc, ...updatedData.data.attributes, id: updatedData.data.id } : acc
         );
         
-        // This is a bit of a hack, we should probably have a dedicated update function in useAuth
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        login(token!, storedUser, updatedAccommodations);
+        login(token!, user!, updatedAccommodations);
 
         toast({
             title: "¡Alojamiento Actualizado!",
@@ -283,21 +284,21 @@ export default function DashboardPage() {
                                     {/* Form Fields */}
                                     <div className="space-y-2">
                                         <Label htmlFor="denominacion">Nombre del Alojamiento</Label>
-                                        <Input id="denominacion" name="denominacion" value={editingAccommodation.denominacion} onChange={handleFormFieldChange} />
+                                        <Input id="denominacion" name="denominacion" value={editingAccommodation.denominacion} onChange={handleFormFieldChange} className="bg-white" />
                                     </div>
                                      <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="capacidad">Capacidad</Label>
-                                            <Input id="capacidad" name="capacidad" type="number" value={editingAccommodation.capacidad} onChange={handleFormFieldChange} />
+                                            <Input id="capacidad" name="capacidad" type="number" value={editingAccommodation.capacidad} onChange={handleFormFieldChange} className="bg-white" />
                                         </div>
                                          <div className="space-y-2">
                                             <Label htmlFor="telefono">Teléfono</Label>
-                                            <Input id="telefono" name="telefono" value={editingAccommodation.telefono} onChange={handleFormFieldChange} />
+                                            <Input id="telefono" name="telefono" value={editingAccommodation.telefono} onChange={handleFormFieldChange} className="bg-white" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="descripcion">📝 Descripción General</Label>
-                                        <Textarea id="descripcion" name="descripcion" value={editingAccommodation.descripcion} onChange={handleFormFieldChange} />
+                                        <Textarea id="descripcion" name="descripcion" value={editingAccommodation.descripcion} onChange={handleFormFieldChange} className="bg-white" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>✔️ Servicios Incluidos</Label>
@@ -326,29 +327,29 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="checkin">⏰ Hora de Check-in</Label>
-                                            <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin.substring(0,5)} onChange={handleFormFieldChange} />
+                                            <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin.substring(0,5)} onChange={handleFormFieldChange} className="bg-white" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="checkout">⏰ Hora de Check-out</Label>
-                                            <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout.substring(0,5)} onChange={handleFormFieldChange} />
+                                            <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout.substring(0,5)} onChange={handleFormFieldChange} className="bg-white" />
                                         </div>
                                     </div>
                                      <div className="space-y-2">
                                         <Label htmlFor="politica_cancelacion">ℹ️ Política de Cancelación</Label>
-                                        <Textarea id="politica_cancelacion" name="politica_cancelacion" value={editingAccommodation.politica_cancelacion} onChange={handleFormFieldChange} />
+                                        <Textarea id="politica_cancelacion" name="politica_cancelacion" value={editingAccommodation.politica_cancelacion} onChange={handleFormFieldChange} className="bg-white" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="reglas_casa">📜 Reglas de la Casa</Label>
-                                        <Textarea id="reglas_casa" name="reglas_casa" value={editingAccommodation.reglas_casa} onChange={handleFormFieldChange} />
+                                        <Textarea id="reglas_casa" name="reglas_casa" value={editingAccommodation.reglas_casa} onChange={handleFormFieldChange} className="bg-white" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="metodo_pago">💳 Método de Pago</Label>
-                                        <Input id="metodo_pago" name="metodo_pago" value={editingAccommodation.metodo_pago} onChange={handleFormFieldChange} />
+                                        <Input id="metodo_pago" name="metodo_pago" value={editingAccommodation.metodo_pago} onChange={handleFormFieldChange} className="bg-white" />
                                     </div>
                                      <div className="space-y-2">
                                         <Label htmlFor="ubicacion">📍 Ubicación (Coordenadas)</Label>
                                         <div className="flex gap-2">
-                                            <Input id="ubicacion" name="ubicacion" value={editingAccommodation.ubicacion} onChange={handleFormFieldChange} />
+                                            <Input id="ubicacion" name="ubicacion" value={editingAccommodation.ubicacion} onChange={handleFormFieldChange} className="bg-white" />
                                              <Button type="button" variant="outline" size="icon" onClick={() => window.open('https://maps.google.com', '_blank')}>
                                                 <Map className="h-4 w-4" />
                                             </Button>
@@ -378,9 +379,9 @@ export default function DashboardPage() {
                <Separator />
 
                 <Accordion type="single" collapsible className="w-full">
-                    {availableServices.length > 0 && (
+                    {alojamiento.Servicios && availableServices.length > 0 && (
                         <AccordionItem value="item-1">
-                            <AccordionTrigger>Servicios Incluidos</AccordionTrigger>
+                            <AccordionTrigger>✔️ Servicios Incluidos</AccordionTrigger>
                             <AccordionContent>
                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                                 {availableServices.map((key) => (
@@ -395,7 +396,7 @@ export default function DashboardPage() {
                         </AccordionItem>
                     )}
                     <AccordionItem value="item-2">
-                        <AccordionTrigger>Horarios y Políticas</AccordionTrigger>
+                        <AccordionTrigger>⏰ Horarios y Políticas</AccordionTrigger>
                         <AccordionContent className="space-y-2">
                             {alojamiento.checkin && (
                                 <div className="flex items-center gap-2">
@@ -421,17 +422,17 @@ export default function DashboardPage() {
                         </AccordionContent>
                     </AccordionItem>
                      <AccordionItem value="item-3">
-                        <AccordionTrigger>Descripción y Reglas</AccordionTrigger>
+                        <AccordionTrigger>📝 Descripción y Reglas</AccordionTrigger>
                         <AccordionContent className="space-y-4">
                              {alojamiento.descripcion && (
                                 <div>
-                                    <strong>📝 Descripción General:</strong>
+                                    <strong>Descripción General:</strong>
                                     <p className="text-muted-foreground">{alojamiento.descripcion}</p>
                                 </div>
                              )}
                              {alojamiento.reglas_casa && (
                                  <div>
-                                    <strong>📜 Reglas de la Casa:</strong>
+                                    <strong>Reglas de la Casa:</strong>
                                     <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
                                 </div>
                              )}
@@ -461,5 +462,6 @@ export default function DashboardPage() {
       <Footer />
     </div>
   );
+}
 
     
