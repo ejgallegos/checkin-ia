@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -235,7 +235,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
       <Header />
-      <main className="flex-grow container max-w-4xl mx-auto py-12">
+      <main className="flex-grow container max-w-7xl mx-auto py-12">
         <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl md:text-4xl font-bold">👋 ¡Hola, {user?.username}!</h1>
             <Button variant="outline" onClick={logout}>
@@ -266,204 +266,214 @@ export default function DashboardPage() {
              );
 
              return (
-             <Card key={alojamiento.id} className="shadow-lg mb-8">
-                <CardHeader className="flex flex-row items-start justify-between">
-                    <div>
-                        <CardTitle className="flex items-center gap-2">🏨 {alojamiento.denominacion}
-                        {alojamiento.tipo && (
-                            <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
-                                - {accommodationTypeIcons[alojamiento.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {alojamiento.tipo}
-                            </span>
-                        )}
-                       </CardTitle>
-                       <CardDescription>Gestiona la conexión de IA y los datos de este alojamiento.</CardDescription>
-                   </div>
-                   <Dialog open={!!editingAccommodation && editingAccommodation.documentId === alojamiento.documentId} onOpenChange={(isOpen) => !isOpen && setEditingAccommodation(null)}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" onClick={() => handleEditClick(alojamiento)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Editar
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>✏️ Editando: {editingAccommodation?.denominacion}</DialogTitle>
-                            </DialogHeader>
-                            {editingAccommodation && (
-                               <div className="space-y-6 py-4">
-                                    {/* Form Fields */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="denominacion">Nombre del Alojamiento</Label>
-                                        <Input id="denominacion" name="denominacion" value={editingAccommodation.denominacion} onChange={handleFormFieldChange} className="bg-white" />
-                                    </div>
-                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="capacidad">Capacidad</Label>
-                                            <Input id="capacidad" name="capacidad" type="number" value={editingAccommodation.capacidad} onChange={handleFormFieldChange} className="bg-white" />
-                                        </div>
+             <div key={alojamiento.documentId} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
+               {/* Accommodation Data Card */}
+               <Card className="shadow-lg lg:col-span-2">
+                 <CardHeader className="flex flex-row items-start justify-between">
+                     <div>
+                         <CardTitle className="flex items-center gap-2">
+                             {alojamiento.tipo && (accommodationTypeIcons[alojamiento.tipo] || <Building className="w-6 h-6 text-primary" />)}
+                             {alojamiento.denominacion}
+                         </CardTitle>
+                        <CardDescription>
+                             {alojamiento.tipo && <span className="capitalize">{alojamiento.tipo}</span>}
+                             {alojamiento.capacidad && ` para ${alojamiento.capacidad} personas`}
+                        </CardDescription>
+                    </div>
+                    <Dialog open={!!editingAccommodation && editingAccommodation.documentId === alojamiento.documentId} onOpenChange={(isOpen) => !isOpen && setEditingAccommodation(null)}>
+                         <DialogTrigger asChild>
+                             <Button variant="outline" onClick={() => handleEditClick(alojamiento)}>
+                                 <Pencil className="mr-2 h-4 w-4" /> Editar
+                             </Button>
+                         </DialogTrigger>
+                         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                             <DialogHeader>
+                                 <DialogTitle>✏️ Editando: {editingAccommodation?.denominacion}</DialogTitle>
+                             </DialogHeader>
+                             {editingAccommodation && (
+                                <div className="space-y-6 py-4">
+                                     {/* Form Fields */}
+                                     <div className="space-y-2">
+                                         <Label htmlFor="denominacion">Nombre del Alojamiento</Label>
+                                         <Input id="denominacion" name="denominacion" value={editingAccommodation.denominacion} onChange={handleFormFieldChange} className="bg-white" />
+                                     </div>
+                                      <div className="grid grid-cols-2 gap-4">
                                          <div className="space-y-2">
-                                            <Label htmlFor="telefono">Teléfono</Label>
-                                            <Input id="telefono" name="telefono" value={editingAccommodation.telefono} onChange={handleFormFieldChange} className="bg-white" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="descripcion">📝 Descripción General</Label>
-                                        <Textarea id="descripcion" name="descripcion" value={editingAccommodation.descripcion} onChange={handleFormFieldChange} className="bg-white" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>✔️ Servicios Incluidos</Label>
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-md border p-4">
-                                            {amenityItems.map((item) => (
-                                              <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                                <Checkbox
-                                                  id={`edit-${item.id}`}
-                                                  checked={editingAccommodation.Servicios?.[item.id as keyof typeof editingAccommodation.Servicios] || false}
-                                                  onCheckedChange={(checked) => handleServiceChange(item.id, !!checked)}
-                                                />
-                                                <Label htmlFor={`edit-${item.id}`} className="font-normal">{item.label}</Label>
-                                              </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-base">¿Se aceptan mascotas?</Label>
-                                        </div>
-                                        <Switch
-                                          checked={!!editingAccommodation.Servicios?.mascotas}
-                                          onCheckedChange={handleMascotasChange}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="checkin">⏰ Hora de Check-in</Label>
-                                            <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin ? editingAccommodation.checkin.substring(0,5) : ''} onChange={handleFormFieldChange} className="bg-white" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="checkout">⏰ Hora de Check-out</Label>
-                                            <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout ? editingAccommodation.checkout.substring(0,5) : ''} onChange={handleFormFieldChange} className="bg-white" />
-                                        </div>
-                                    </div>
+                                             <Label htmlFor="capacidad">Capacidad</Label>
+                                             <Input id="capacidad" name="capacidad" type="number" value={editingAccommodation.capacidad} onChange={handleFormFieldChange} className="bg-white" />
+                                         </div>
+                                          <div className="space-y-2">
+                                             <Label htmlFor="telefono">Teléfono</Label>
+                                             <Input id="telefono" name="telefono" value={editingAccommodation.telefono} onChange={handleFormFieldChange} className="bg-white" />
+                                         </div>
+                                     </div>
                                      <div className="space-y-2">
-                                        <Label htmlFor="politica_cancelacion">ℹ️ Política de Cancelación</Label>
-                                        <Textarea id="politica_cancelacion" name="politica_cancelacion" value={editingAccommodation.politica_cancelacion} onChange={handleFormFieldChange} className="bg-white" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="reglas_casa">📜 Reglas de la Casa</Label>
-                                        <Textarea id="reglas_casa" name="reglas_casa" value={editingAccommodation.reglas_casa} onChange={handleFormFieldChange} className="bg-white" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="metodo_pago">💳 Método de Pago</Label>
-                                        <Input id="metodo_pago" name="metodo_pago" value={editingAccommodation.metodo_pago} onChange={handleFormFieldChange} className="bg-white" />
-                                    </div>
+                                         <Label htmlFor="descripcion">📝 Descripción General</Label>
+                                         <Textarea id="descripcion" name="descripcion" value={editingAccommodation.descripcion} onChange={handleFormFieldChange} className="bg-white" />
+                                     </div>
                                      <div className="space-y-2">
-                                        <Label htmlFor="ubicacion">📍 Ubicación (Coordenadas)</Label>
-                                        <div className="flex gap-2">
-                                            <Input id="ubicacion" name="ubicacion" value={editingAccommodation.ubicacion} onChange={handleFormFieldChange} className="bg-white" />
-                                             <Button type="button" variant="outline" size="icon" onClick={() => window.open('https://maps.google.com', '_blank')}>
-                                                <Map className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                               </div>
-                            )}
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button type="button" variant="outline">Cancelar</Button>
-                                </DialogClose>
-                                <Button onClick={handleUpdateAccommodation} disabled={isUpdating}>
-                                    {isUpdating ? <Loader className="animate-spin" /> : "Guardar Cambios"}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-             <CardContent className="space-y-4">
-               
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                 {alojamiento.capacidad && <p className="flex items-center gap-2">👥 <strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
-                 {alojamiento.ubicacion && <p className="flex items-center gap-2">📍 <strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
-                 {alojamiento.telefono && <p className="flex items-center gap-2">📞 <strong>Teléfono:</strong> {alojamiento.telefono}</p>}
-                 {alojamiento.metodo_pago && <p className="flex items-center gap-2">💳 <strong>Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
-               </div>
-               <Separator />
+                                         <Label>✔️ Servicios Incluidos</Label>
+                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-md border p-4">
+                                             {amenityItems.map((item) => (
+                                               <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                 <Checkbox
+                                                   id={`edit-${item.id}`}
+                                                   checked={editingAccommodation.Servicios?.[item.id as keyof typeof editingAccommodation.Servicios] || false}
+                                                   onCheckedChange={(checked) => handleServiceChange(item.id, !!checked)}
+                                                 />
+                                                 <Label htmlFor={`edit-${item.id}`} className="font-normal">{item.label}</Label>
+                                               </div>
+                                             ))}
+                                         </div>
+                                     </div>
+                                     <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                         <div className="space-y-0.5">
+                                             <Label className="text-base">¿Se aceptan mascotas?</Label>
+                                         </div>
+                                         <Switch
+                                           checked={!!editingAccommodation.Servicios?.mascotas}
+                                           onCheckedChange={handleMascotasChange}
+                                         />
+                                     </div>
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                         <div className="space-y-2">
+                                             <Label htmlFor="checkin">⏰ Hora de Check-in</Label>
+                                             <Input id="checkin" name="checkin" type="time" value={editingAccommodation.checkin ? editingAccommodation.checkin.substring(0,5) : ''} onChange={handleFormFieldChange} className="bg-white" />
+                                         </div>
+                                         <div className="space-y-2">
+                                             <Label htmlFor="checkout">⏰ Hora de Check-out</Label>
+                                             <Input id="checkout" name="checkout" type="time" value={editingAccommodation.checkout ? editingAccommodation.checkout.substring(0,5) : ''} onChange={handleFormFieldChange} className="bg-white" />
+                                         </div>
+                                     </div>
+                                      <div className="space-y-2">
+                                         <Label htmlFor="politica_cancelacion">ℹ️ Política de Cancelación</Label>
+                                         <Textarea id="politica_cancelacion" name="politica_cancelacion" value={editingAccommodation.politica_cancelacion} onChange={handleFormFieldChange} className="bg-white" />
+                                     </div>
+                                     <div className="space-y-2">
+                                         <Label htmlFor="reglas_casa">📜 Reglas de la Casa</Label>
+                                         <Textarea id="reglas_casa" name="reglas_casa" value={editingAccommodation.reglas_casa} onChange={handleFormFieldChange} className="bg-white" />
+                                     </div>
+                                     <div className="space-y-2">
+                                         <Label htmlFor="metodo_pago">💳 Método de Pago</Label>
+                                         <Input id="metodo_pago" name="metodo_pago" value={editingAccommodation.metodo_pago} onChange={handleFormFieldChange} className="bg-white" />
+                                     </div>
+                                      <div className="space-y-2">
+                                         <Label htmlFor="ubicacion">📍 Ubicación (Coordenadas)</Label>
+                                         <div className="flex gap-2">
+                                             <Input id="ubicacion" name="ubicacion" value={editingAccommodation.ubicacion} onChange={handleFormFieldChange} className="bg-white" />
+                                              <Button type="button" variant="outline" size="icon" onClick={() => window.open('https://maps.google.com', '_blank')}>
+                                                 <Map className="h-4 w-4" />
+                                             </Button>
+                                         </div>
+                                     </div>
+                                </div>
+                             )}
+                             <DialogFooter>
+                                 <DialogClose asChild>
+                                     <Button type="button" variant="outline">Cancelar</Button>
+                                 </DialogClose>
+                                 <Button onClick={handleUpdateAccommodation} disabled={isUpdating}>
+                                     {isUpdating ? <Loader className="animate-spin" /> : "Guardar Cambios"}
+                                 </Button>
+                             </DialogFooter>
+                         </DialogContent>
+                     </Dialog>
+                 </CardHeader>
+                 <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                        {alojamiento.capacidad && <p className="flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> <strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
+                        {alojamiento.ubicacion && <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> <strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
+                        {alojamiento.telefono && <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" /> <strong>Teléfono:</strong> {alojamiento.telefono}</p>}
+                        {alojamiento.metodo_pago && <p className="flex items-center gap-2"><CreditCard className="w-4 h-4 text-primary" /> <strong>Pago:</strong> {alojamiento.metodo_pago}</p>}
+                    </div>
+                    <Separator />
 
-                <Accordion type="single" collapsible className="w-full">
-                    {alojamiento.Servicios && availableServices.length > 0 && (
-                        <AccordionItem value="item-1">
-                            <AccordionTrigger>✔️ Servicios Incluidos</AccordionTrigger>
-                            <AccordionContent>
-                               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-                                {availableServices.map((key) => (
-                                    <div key={key} className="flex items-center gap-2">
-                                        {serviceIcons[key]}
-                                        <span>{serviceLabels[key]}</span>
-                                        <Check className="w-5 h-5 text-green-500" />
-                                    </div>
-                                ))}
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    )}
-                    <AccordionItem value="item-2">
-                        <AccordionTrigger>⏰ Horarios y Políticas</AccordionTrigger>
-                        <AccordionContent className="space-y-2">
-                            {alojamiento.checkin && (
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-primary"/>
-                                    <strong>Check-in:</strong> {alojamiento.checkin.substring(0,5)} hs
-                                </div>
-                            )}
-                            {alojamiento.checkout && (
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-primary"/>
-                                    <strong>Check-out:</strong> {alojamiento.checkout.substring(0,5)} hs
-                                </div>
-                            )}
-                             {alojamiento.politica_cancelacion && (
-                                <div className="flex items-start gap-2 mt-2">
-                                    <Info className="w-5 h-5 text-primary flex-shrink-0 mt-1"/>
-                                    <div>
-                                        <strong>Política de Cancelación:</strong>
-                                        <p className="text-muted-foreground">{alojamiento.politica_cancelacion}</p>
-                                    </div>
-                                </div>
-                             )}
-                        </AccordionContent>
-                    </AccordionItem>
-                     <AccordionItem value="item-3">
-                        <AccordionTrigger>📝 Descripción y Reglas</AccordionTrigger>
-                        <AccordionContent className="space-y-4">
-                             {alojamiento.descripcion && (
-                                <div>
-                                    <strong>Descripción General:</strong>
-                                    <p className="text-muted-foreground">{alojamiento.descripcion}</p>
-                                </div>
-                             )}
-                             {alojamiento.reglas_casa && (
-                                 <div>
-                                    <strong>Reglas de la Casa:</strong>
-                                    <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
-                                </div>
-                             )}
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-                
-                <div className="mt-6 text-center flex flex-col items-center">
-                    {qrCodeUrl[String(alojamiento.id)] ? (
-                      <>
-                        <h4 className="font-semibold mb-2">✨ ¡Conexión Lista!</h4>
-                        <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde tu app de WhatsApp para vincular tu número.</p>
-                        <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
-                      </>
-                    ) : (
-                       <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
-                        {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp con IA </>}
-                      </Button>
-                    )}
-                </div>
-             </CardContent>
-           </Card>
+                     <Accordion type="single" collapsible className="w-full">
+                         {alojamiento.Servicios && availableServices.length > 0 && (
+                             <AccordionItem value="item-1">
+                                 <AccordionTrigger>✔️ Servicios Incluidos</AccordionTrigger>
+                                 <AccordionContent>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                                     {availableServices.map((key) => (
+                                         <div key={key} className="flex items-center gap-2 text-sm">
+                                             {serviceIcons[key]}
+                                             <span>{serviceLabels[key]}</span>
+                                         </div>
+                                     ))}
+                                     </div>
+                                 </AccordionContent>
+                             </AccordionItem>
+                         )}
+                         <AccordionItem value="item-2">
+                             <AccordionTrigger>⏰ Horarios y Políticas</AccordionTrigger>
+                             <AccordionContent className="space-y-3">
+                                 {alojamiento.checkin && (
+                                     <div className="flex items-center gap-2 text-sm">
+                                         <Clock className="w-4 h-4 text-primary"/>
+                                         <strong>Check-in:</strong> {alojamiento.checkin.substring(0,5)} hs
+                                     </div>
+                                 )}
+                                 {alojamiento.checkout && (
+                                     <div className="flex items-center gap-2 text-sm">
+                                         <Clock className="w-4 h-4 text-primary"/>
+                                         <strong>Check-out:</strong> {alojamiento.checkout.substring(0,5)} hs
+                                     </div>
+                                 )}
+                                  {alojamiento.politica_cancelacion && (
+                                     <div className="flex items-start gap-2 mt-2 text-sm">
+                                         <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"/>
+                                         <div>
+                                             <strong>Política de Cancelación:</strong>
+                                             <p className="text-muted-foreground">{alojamiento.politica_cancelacion}</p>
+                                         </div>
+                                     </div>
+                                  )}
+                             </AccordionContent>
+                         </AccordionItem>
+                          <AccordionItem value="item-3">
+                             <AccordionTrigger>📝 Descripción y Reglas</AccordionTrigger>
+                             <AccordionContent className="space-y-4 text-sm">
+                                  {alojamiento.descripcion && (
+                                     <div>
+                                         <strong>Descripción General:</strong>
+                                         <p className="text-muted-foreground">{alojamiento.descripcion}</p>
+                                     </div>
+                                  )}
+                                  {alojamiento.reglas_casa && (
+                                      <div>
+                                         <strong>Reglas de la Casa:</strong>
+                                         <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
+                                     </div>
+                                  )}
+                             </AccordionContent>
+                         </AccordionItem>
+                     </Accordion>
+                 </CardContent>
+               </Card>
+               
+               {/* QR Code Card */}
+                <Card className="shadow-lg">
+                    <CardHeader>
+                        <CardTitle>🤖 Conexión con IA</CardTitle>
+                        <CardDescription>Activa el asistente virtual para tu WhatsApp.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center text-center">
+                        {qrCodeUrl[String(alojamiento.id)] ? (
+                          <>
+                            <h4 className="font-semibold mb-2">✨ ¡Conexión Lista!</h4>
+                            <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde la app de WhatsApp para vincular tu número.</p>
+                            <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
+                          </>
+                        ) : (
+                           <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
+                            {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp </>}
+                          </Button>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-4">La conexión puede tardar unos segundos en establecerse.</p>
+                    </CardContent>
+                </Card>
+
+             </div>
              );
             })
         )}
