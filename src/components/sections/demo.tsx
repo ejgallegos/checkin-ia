@@ -232,12 +232,11 @@ export function DemoSection() {
               instanceName: values.nombreAlojamiento,
               integration: "WHATSAPP-BAILEYS",
               token: newlyCreatedAccommodation.documentId,
-              number: `+54${values.telefono}`
+              number: `54${values.telefono}`
           })
       });
 
       if (!evolutionApiResponse.ok) {
-          // We can show a toast, but we don't stop the login flow
            toast({
             title: "Atención: Falló la conexión con WhatsApp",
             description: "Tu cuenta fue creada, pero no pudimos crear la instancia de WhatsApp. Podrás generarla desde tu panel.",
