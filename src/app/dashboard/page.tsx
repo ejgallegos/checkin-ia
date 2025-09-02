@@ -136,10 +136,9 @@ export default function DashboardPage() {
             </Card>
         ) : (
             accommodations.map((alojamiento) => {
-             if (!alojamiento || !alojamiento.attributes) return null;
+             if (!alojamiento) return null;
              
-             const { attributes } = alojamiento;
-             const services = attributes.Servicios || {};
+             const services = alojamiento.Servicios || {};
              const availableServices = Object.keys(serviceIcons).filter(
                 (key) => services && services[key as keyof typeof services] === true
              );
@@ -147,10 +146,10 @@ export default function DashboardPage() {
              return (
              <Card key={alojamiento.id} className="shadow-lg mb-8">
              <CardHeader>
-               <CardTitle className="flex items-center gap-2">{attributes.denominacion}
-                {attributes.tipo && (
+               <CardTitle className="flex items-center gap-2">{alojamiento.denominacion}
+                {alojamiento.tipo && (
                     <span className="text-sm font-normal text-muted-foreground capitalize flex items-center gap-1">
-                        - {accommodationTypeIcons[attributes.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {attributes.tipo}
+                        - {accommodationTypeIcons[alojamiento.tipo] || <Building className="w-5 h-5 text-muted-foreground" />} {alojamiento.tipo}
                     </span>
                 )}
                </CardTitle>
@@ -159,10 +158,10 @@ export default function DashboardPage() {
              <CardContent className="space-y-4">
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                 {attributes.capacidad && <p><strong>Capacidad:</strong> {attributes.capacidad} personas</p>}
-                 {attributes.ubicacion && <p><strong>Ubicación:</strong> {attributes.ubicacion}</p>}
-                 {attributes.telefono && <p><strong>Teléfono:</strong> {attributes.telefono}</p>}
-                 {attributes.metodo_pago && <p><strong>Método de Pago:</strong> {attributes.metodo_pago}</p>}
+                 {alojamiento.capacidad && <p><strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
+                 {alojamiento.ubicacion && <p><strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
+                 {alojamiento.telefono && <p><strong>Teléfono:</strong> {alojamiento.telefono}</p>}
+                 {alojamiento.metodo_pago && <p><strong>Método de Pago:</strong> {alojamiento.metodo_pago}</p>}
                </div>
                <Separator />
 
@@ -186,24 +185,24 @@ export default function DashboardPage() {
                     <AccordionItem value="item-2">
                         <AccordionTrigger>Horarios y Políticas</AccordionTrigger>
                         <AccordionContent className="space-y-2">
-                            {attributes.checkin && (
+                            {alojamiento.checkin && (
                                 <div className="flex items-center gap-2">
                                     <Clock className="w-5 h-5 text-primary"/>
-                                    <strong>Check-in:</strong> {attributes.checkin.substring(0,5)} hs
+                                    <strong>Check-in:</strong> {alojamiento.checkin.substring(0,5)} hs
                                 </div>
                             )}
-                            {attributes.checkout && (
+                            {alojamiento.checkout && (
                                 <div className="flex items-center gap-2">
                                     <Clock className="w-5 h-5 text-primary"/>
-                                    <strong>Check-out:</strong> {attributes.checkout.substring(0,5)} hs
+                                    <strong>Check-out:</strong> {alojamiento.checkout.substring(0,5)} hs
                                 </div>
                             )}
-                             {attributes.politica_cancelacion && (
+                             {alojamiento.politica_cancelacion && (
                                 <div className="flex items-start gap-2 mt-2">
                                     <Info className="w-5 h-5 text-primary flex-shrink-0 mt-1"/>
                                     <div>
                                         <strong>Política de Cancelación:</strong>
-                                        <p className="text-muted-foreground">{attributes.politica_cancelacion}</p>
+                                        <p className="text-muted-foreground">{alojamiento.politica_cancelacion}</p>
                                     </div>
                                 </div>
                              )}
@@ -212,16 +211,16 @@ export default function DashboardPage() {
                      <AccordionItem value="item-3">
                         <AccordionTrigger>Descripción y Reglas</AccordionTrigger>
                         <AccordionContent className="space-y-4">
-                             {attributes.descripcion && (
+                             {alojamiento.descripcion && (
                                 <div>
                                     <strong>Descripción General:</strong>
-                                    <p className="text-muted-foreground">{attributes.descripcion}</p>
+                                    <p className="text-muted-foreground">{alojamiento.descripcion}</p>
                                 </div>
                              )}
-                             {attributes.reglas_casa && (
+                             {alojamiento.reglas_casa && (
                                  <div>
                                     <strong>Reglas de la Casa:</strong>
-                                    <p className="text-muted-foreground">{attributes.reglas_casa}</p>
+                                    <p className="text-muted-foreground">{alojamiento.reglas_casa}</p>
                                 </div>
                              )}
                         </AccordionContent>
@@ -236,7 +235,7 @@ export default function DashboardPage() {
                         <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
                       </>
                     ) : (
-                       <Button onClick={() => handleGenerateQR(alojamiento.id, attributes.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
+                       <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
                         {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp con IA </>}
                       </Button>
                     )}

@@ -24,7 +24,8 @@ interface Services {
     mascotas: boolean;
 }
 
-interface AccommodationAttributes {
+export interface Accommodation {
+    id: number;
     denominacion: string;
     tipo: string;
     capacidad: number;
@@ -37,11 +38,6 @@ interface AccommodationAttributes {
     metodo_pago: string;
     reglas_casa: string;
     Servicios: Services;
-}
-
-export interface Accommodation {
-    id: number;
-    attributes: AccommodationAttributes;
 }
 
 
@@ -120,5 +116,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    
