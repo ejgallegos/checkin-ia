@@ -237,7 +237,6 @@ export function DemoSection() {
       });
 
       if (!evolutionApiResponse.ok) {
-          console.error("Failed to create Evolution API instance");
           // We can show a toast, but we don't stop the login flow
            toast({
             title: "Atención: Falló la conexión con WhatsApp",
@@ -625,5 +624,3 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
