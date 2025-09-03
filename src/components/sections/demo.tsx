@@ -143,6 +143,7 @@ export function DemoSection() {
   async function onInfoSubmit(values: UserAndAccommodationFormValues) {
     setIsLoading(true);
     try {
+      // 1. Register User
       const registerResponse = await fetch('https://db.turismovillaunion.gob.ar/api/auth/local/register', {
         method: 'POST',
         headers: {
@@ -159,15 +160,12 @@ export function DemoSection() {
 
       if (!registerResponse.ok) {
         const errorMessage = registerData.error?.message || 'Error en el registro. Inténtalo de nuevo.';
-        toast({
-            title: "Error de Registro",
-            description: errorMessage,
-            variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
+        throw new Error(errorMessage);
       }
       
+      const { jwt, user } = registerData;
+
+      // 2. Create Accommodation
       const accommodationDataForApi = {
         data: {
           denominacion: values.nombreAlojamiento,
@@ -181,7 +179,7 @@ export function DemoSection() {
           politica_cancelacion: values.politicaCancelacion,
           metodo_pago: values.metodosPago,
           reglas_casa: values.reglasCasa,
-          usuario: registerData.user.id,
+          usuario: user.id,
           Servicios: {
             wifi: values.amenities.wifi,
             cocina: values.amenities.cocina,
@@ -201,7 +199,7 @@ export function DemoSection() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${registerData.jwt}`
+            'Authorization': `Bearer ${jwt}`
         },
         body: JSON.stringify(accommodationDataForApi)
       });
@@ -210,41 +208,71 @@ export function DemoSection() {
 
       if (!createAccommodationResponse.ok) {
           const errorData = accommodationResponseData;
-          toast({
-            title: "Error al Crear Alojamiento",
-            description: errorData.error?.message || 'No se pudo crear el alojamiento. Contacta a soporte.',
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
+          throw new Error(errorData.error?.message || 'No se pudo crear el alojamiento. Contacta a soporte.');
       }
       
       const newlyCreatedAccommodation = accommodationResponseData.data;
 
-      // Create Evolution API instance
-      const evolutionApiResponse = await fetch('https://evolution.gali.com.ar/instance/create', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'evolution_api_69976825'
-          },
-          body: JSON.stringify({
-              instanceName: values.nombreAlojamiento,
-              integration: "WHATSAPP-BAILEYS",
-              token: newlyCreatedAccommodation.documentId,
-              number: `54${values.telefono}`
-          })
-      });
+      // 3. Create Evolution API instance
+      try {
+        const evolutionApiResponse = await fetch('https://evolution.gali.com.ar/instance/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'evolution_api_69976825'
+            },
+            body: JSON.stringify({
+                instanceName: values.nombreAlojamiento,
+                integration: "WHATSAPP-BAILEYS",
+                token: newlyCreatedAccommodation.documentId, 
+                number: `54${values.telefono}`
+            })
+        });
 
-      if (!evolutionApiResponse.ok) {
+        if (!evolutionApiResponse.ok) {
+             toast({
+              title: "Atención: Falló la creación de la instancia de WhatsApp",
+              description: "Tu cuenta fue creada, pero no pudimos crear la instancia. Podrás generarla desde tu panel.",
+              variant: "destructive",
+            });
+        } else {
+            // 4. Set Webhook for the new instance
+            const encodedInstanceName = encodeURIComponent(values.nombreAlojamiento);
+            const webhookResponse = await fetch(`https://evolution.gali.com.ar/webhook/set/${encodedInstanceName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': 'evolution_api_69976825'
+                },
+                body: JSON.stringify({
+                    webhook: {
+                        enabled: true,
+                        url: "https://n8n.gali.com.ar/webhook/4cf2663e-d777-42a1-8557-8c418a451156",
+                        events: ["MESSAGES_UPSERT"],
+                        base64: true,
+                        byEvents: false
+                    }
+                })
+            });
+
+            if (!webhookResponse.ok) {
+                toast({
+                    title: "Atención: Falló la configuración del Webhook",
+                    description: "La instancia de WhatsApp fue creada, pero no pudimos configurar el webhook. Por favor, contáctanos.",
+                    variant: "destructive",
+                });
+            }
+        }
+      } catch (evolutionError) {
            toast({
-            title: "Atención: Falló la conexión con WhatsApp",
-            description: "Tu cuenta fue creada, pero no pudimos crear la instancia de WhatsApp. Podrás generarla desde tu panel.",
+            title: "Error en la Conexión con WhatsApp",
+            description: "No se pudo conectar con los servicios de WhatsApp. Podrás reintentarlo desde tu panel.",
             variant: "destructive",
           });
       }
 
-      login(registerData.jwt, registerData.user, [newlyCreatedAccommodation]);
+
+      login(jwt, user, [newlyCreatedAccommodation]);
 
       toast({
         title: "¡Registro Exitoso!",
@@ -254,7 +282,6 @@ export function DemoSection() {
       router.push('/dashboard');
 
     } catch (error) {
-      console.error("Error al enviar el formulario:", error);
       toast({
         title: "Error de Registro",
         description: (error as Error).message,
