@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -74,6 +74,8 @@ export default function DashboardPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState<{[key: string]: string | null}>({});
   const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [qrError, setQrError] = useState<{[key: string]: boolean}>({});
+
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -205,6 +207,7 @@ export default function DashboardPage() {
 
   const handleGenerateQR = async (alojamientoId: number, alojamientoNombre: string) => {
     setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: true}));
+    setQrError(prev => ({ ...prev, [String(alojamientoId)]: false }));
     try {
       const encodedDenominacion = encodeURIComponent(alojamientoNombre);
       const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`;
@@ -223,6 +226,7 @@ export default function DashboardPage() {
         description: "Escanea el código con tu app de WhatsApp para conectar.",
       });
     } catch (error) {
+      setQrError(prev => ({ ...prev, [String(alojamientoId)]: true }));
       toast({
         title: "Error de Conexión",
         description: (error as Error).message || "No se pudo generar el QR. Inténtalo de nuevo.",
@@ -289,6 +293,9 @@ export default function DashboardPage() {
              const availableServices = Object.keys(serviceIcons).filter(
                 (key) => services && services[key as keyof typeof services] === true
              );
+             const currentAloId = String(alojamiento.id);
+             const hasError = qrError[currentAloId];
+
 
              return (
              <div key={alojamiento.documentId} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
@@ -494,15 +501,33 @@ export default function DashboardPage() {
                         <CardDescription>Activa el asistente virtual para tu WhatsApp.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center text-center">
-                        {qrCodeUrl[String(alojamiento.id)] ? (
+                        {qrCodeUrl[currentAloId] ? (
                           <>
                             <h4 className="font-semibold mb-2">✨ ¡Conexión Lista!</h4>
                             <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde la app de WhatsApp para vincular tu número.</p>
-                            <img src={qrCodeUrl[String(alojamiento.id)]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
+                            <img src={qrCodeUrl[currentAloId]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
                           </>
+                        ) : hasError ? (
+                            <div className="space-y-4">
+                                <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
+                                <p className="text-destructive font-semibold">Error al generar el QR</p>
+                                <Button 
+                                    onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} 
+                                    className="w-full" 
+                                    size="lg" 
+                                    disabled={isGeneratingQR[currentAloId]}
+                                >
+                                    {isGeneratingQR[currentAloId] ? <Loader className="animate-spin" /> : <><RefreshCw className="mr-2" /> Reintentar</>}
+                                </Button>
+                            </div>
                         ) : (
-                           <Button onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} className="w-full" size="lg" disabled={isGeneratingQR[String(alojamiento.id)]}>
-                            {isGeneratingQR[String(alojamiento.id)] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp </>}
+                           <Button 
+                            onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} 
+                            className="w-full" 
+                            size="lg" 
+                            disabled={isGeneratingQR[currentAloId]}
+                          >
+                            {isGeneratingQR[currentAloId] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp </>}
                           </Button>
                         )}
                         <p className="text-xs text-muted-foreground mt-4">La conexión puede tardar unos segundos en establecerse.</p>
@@ -518,6 +543,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-    
