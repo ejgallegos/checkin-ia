@@ -97,11 +97,11 @@ export default function DashboardPage() {
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editingAccommodation) return;
     const { value } = e.target;
-    // Allow only numbers
-    if (/^\d*$/.test(value)) {
+    // Allow only numbers and ensure it stays within a reasonable length
+    if (/^\d*$/.test(value) && value.length <= 15) {
        setEditingAccommodation({
            ...editingAccommodation,
-           telefono: `+54${value}`
+           telefono: value.startsWith('+54') ? value : `+54${value}`
        });
     }
   };
@@ -175,9 +175,11 @@ export default function DashboardPage() {
         // Create the new full accommodation object with the updated attributes
         const updatedAccommodationData = {
           ...editingAccommodation,
-          ...updatedAccommodationFromApi,
+          ...updatedAccommodationFromApi.attributes,
+          id: updatedAccommodationFromApi.id, // Make sure to use the new ID if it changes
+          documentId: updatedAccommodationFromApi.id, // Keep documentId consistent
         };
-
+        
         const updatedAccommodationsList = accommodations.map(acc => 
             acc.documentId === editingAccommodation.documentId ? updatedAccommodationData : acc
         );
@@ -205,9 +207,12 @@ export default function DashboardPage() {
     setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: true}));
     try {
       const encodedDenominacion = encodeURIComponent(alojamientoNombre);
-      const apiKey = 'evolution_api_69976825';
-      const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}?apikey=${apiKey}`;
-      const response = await fetch(apiUrl);
+      const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`;
+      const response = await fetch(apiUrl, {
+          headers: {
+              'apikey': 'evolution_api_69976825'
+          }
+      });
       const data = await response.json();
       if (!response.ok || !data.base64) {
         throw new Error(data.message || 'La respuesta de la API no contiene un código QR válido.');
@@ -331,7 +336,7 @@ export default function DashboardPage() {
                                                 <Input 
                                                   id="telefono" 
                                                   name="telefono"
-                                                  value={editingAccommodation.telefono.startsWith('+54') ? editingAccommodation.telefono.substring(3) : editingAccommodation.telefono}
+                                                  value={editingAccommodation.telefono.replace('+54', '')}
                                                   onChange={handlePhoneNumberChange} 
                                                   className="bg-white rounded-l-none" 
                                                 />
@@ -514,4 +519,5 @@ export default function DashboardPage() {
   );
 }
 
+    
     
