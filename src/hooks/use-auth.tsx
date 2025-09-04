@@ -30,6 +30,7 @@ export interface Accommodation {
     denominacion: string;
     tipo: string;
     capacidad: number;
+    precio_noche?: number;
     checkin: string;
     checkout: string;
     telefono: string;
@@ -117,5 +118,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    

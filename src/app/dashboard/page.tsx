@@ -152,6 +152,7 @@ export default function DashboardPage() {
           ...dataToUpdate,
           telefono: finalPhoneNumber,
           capacidad: Number(dataToUpdate.capacidad),
+          precio_noche: Number(dataToUpdate.precio_noche),
         }
     };
     
@@ -329,12 +330,16 @@ export default function DashboardPage() {
                                          <Label htmlFor="denominacion">Nombre del Alojamiento</Label>
                                          <Input id="denominacion" name="denominacion" value={editingAccommodation.denominacion} onChange={handleFormFieldChange} className="bg-white" />
                                      </div>
-                                      <div className="grid grid-cols-2 gap-4">
-                                         <div className="space-y-2">
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                         <div className="space-y-2 sm:col-span-1">
                                              <Label htmlFor="capacidad">Capacidad</Label>
                                              <Input id="capacidad" name="capacidad" type="number" value={editingAccommodation.capacidad} onChange={handleFormFieldChange} className="bg-white" />
                                          </div>
-                                          <div className="space-y-2">
+                                         <div className="space-y-2 sm:col-span-1">
+                                            <Label htmlFor="precio_noche">Precio por Noche</Label>
+                                            <Input id="precio_noche" name="precio_noche" type="number" step="0.01" value={editingAccommodation.precio_noche || ''} onChange={handleFormFieldChange} className="bg-white" />
+                                          </div>
+                                          <div className="space-y-2 sm:col-span-1">
                                              <Label htmlFor="telefono">Teléfono</Label>
                                               <div className="flex items-center">
                                                 <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-secondary text-muted-foreground text-sm">
@@ -425,6 +430,7 @@ export default function DashboardPage() {
                  <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                         {alojamiento.capacidad && <p className="flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> <strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
+                        {alojamiento.precio_noche && <p className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-primary" /> <strong>Precio/noche:</strong> ${alojamiento.precio_noche.toLocaleString('es-AR')}</p>}
                         {alojamiento.ubicacion && <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> <strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
                         {alojamiento.telefono && <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" /> <strong>Teléfono:</strong> {alojamiento.telefono}</p>}
                         {alojamiento.metodo_pago && <p className="flex items-center gap-2"><CreditCard className="w-4 h-4 text-primary" /> <strong>Pago:</strong> {alojamiento.metodo_pago}</p>}

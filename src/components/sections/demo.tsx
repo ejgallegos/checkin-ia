@@ -50,6 +50,7 @@ const formSchema = z.object({
     required_error: "Debes seleccionar un tipo de alojamiento."
   }),
   capacidad: z.coerce.number().min(1, "La capacidad debe ser al menos 1."),
+  precio_noche: z.coerce.number().positive("El precio debe ser un número positivo."),
 
   // Step 3: Amenities and Policies
   amenities: amenitiesSchema,
@@ -70,7 +71,7 @@ type UserAndAccommodationFormValues = z.infer<typeof formSchema>;
 
 const stepFields = {
   1: ["nombre", "email", "password"],
-  2: ["nombreAlojamiento", "tipoAlojamiento", "capacidad"],
+  2: ["nombreAlojamiento", "tipoAlojamiento", "capacidad", "precio_noche"],
   3: ["amenities", "politicaCancelacion", "metodosPago"],
   4: ["checkIn", "checkOut", "mascotas", "reglasCasa", "telefono", "ubicacion", "descripcion"],
 };
@@ -106,6 +107,7 @@ export function DemoSection() {
       descripcion: "",
       telefono: "",
       capacidad: 1,
+      precio_noche: 0,
       ubicacion: "",
       amenities: {
         wifi: false,
@@ -171,6 +173,7 @@ export function DemoSection() {
           denominacion: values.nombreAlojamiento,
           tipo: values.tipoAlojamiento,
           capacidad: values.capacidad,
+          precio_noche: values.precio_noche,
           checkin: `${values.checkIn}:00`,
           checkout: `${values.checkOut}:00`,
           telefono: `+54${values.telefono}`,
@@ -414,19 +417,34 @@ export function DemoSection() {
                             </FormItem>
                           )}
                         />
-                         <FormField
-                          control={form.control}
-                          name="capacidad"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Capacidad de Personas</FormLabel>
-                              <FormControl>
-                                <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-2 gap-4">
+                           <FormField
+                            control={form.control}
+                            name="capacidad"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Capacidad</FormLabel>
+                                <FormControl>
+                                  <Input type="number" min="1" placeholder="Ej: 4" {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                           <FormField
+                            control={form.control}
+                            name="precio_noche"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Precio por Noche</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" min="0" placeholder="Ej: 50000" {...field} disabled={isLoading}/>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                     )}
                     
