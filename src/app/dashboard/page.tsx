@@ -337,7 +337,10 @@ export default function DashboardPage() {
                                          </div>
                                          <div className="space-y-2 sm:col-span-1">
                                             <Label htmlFor="precio_noche">Precio por Noche</Label>
-                                            <Input id="precio_noche" name="precio_noche" type="number" step="0.01" value={editingAccommodation.precio_noche || ''} onChange={handleFormFieldChange} className="bg-white" />
+                                              <div className="relative">
+                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
+                                                <Input id="precio_noche" name="precio_noche" type="number" step="0.01" value={editingAccommodation.precio_noche || ''} onChange={handleFormFieldChange} className="bg-white pl-7" />
+                                            </div>
                                           </div>
                                           <div className="space-y-2 sm:col-span-1">
                                              <Label htmlFor="telefono">Teléfono</Label>
@@ -430,7 +433,7 @@ export default function DashboardPage() {
                  <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                         {alojamiento.capacidad && <p className="flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> <strong>Capacidad:</strong> {alojamiento.capacidad} personas</p>}
-                        {alojamiento.precio_noche && <p className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-primary" /> <strong>Precio/noche:</strong> ${alojamiento.precio_noche.toLocaleString('es-AR')}</p>}
+                        {alojamiento.precio_noche != null && <p className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-primary" /> <strong>Precio/noche:</strong> ${alojamiento.precio_noche.toLocaleString('es-AR')}</p>}
                         {alojamiento.ubicacion && <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> <strong>Ubicación:</strong> {alojamiento.ubicacion}</p>}
                         {alojamiento.telefono && <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" /> <strong>Teléfono:</strong> {alojamiento.telefono}</p>}
                         {alojamiento.metodo_pago && <p className="flex items-center gap-2"><CreditCard className="w-4 h-4 text-primary" /> <strong>Pago:</strong> {alojamiento.metodo_pago}</p>}
@@ -549,3 +552,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

@@ -438,7 +438,10 @@ export function DemoSection() {
                               <FormItem>
                                 <FormLabel>Precio por Noche</FormLabel>
                                 <FormControl>
-                                  <Input type="number" step="0.01" min="0" placeholder="Ej: 50000" {...field} disabled={isLoading}/>
+                                   <div className="relative">
+                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
+                                      <Input type="number" step="0.01" min="0" placeholder="Ej: 50000" {...field} disabled={isLoading} className="pl-7"/>
+                                   </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -668,3 +671,5 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
