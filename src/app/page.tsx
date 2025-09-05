@@ -2,20 +2,20 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { HeroSection } from '@/components/sections/hero';
 import { BenefitsSection } from "@/components/sections/benefits";
-import { TestimonialsSection } from "@/components/sections/testimonials";
+import { PricingSection } from "@/components/sections/pricing";
 import { FaqSection } from "@/components/sections/faq";
 import { DemoSection } from "@/components/sections/demo";
 
-type SectionKey = "benefits" | "testimonials" | "faq" | "demo";
+type SectionKey = "benefits" | "pricing" | "faq" | "demo";
 
 const sectionComponents: Record<SectionKey, React.ReactNode> = {
   benefits: <BenefitsSection />,
-  testimonials: <TestimonialsSection />,
+  pricing: <PricingSection />,
   faq: <FaqSection />,
   demo: <DemoSection />,
 };
 
-const ALL_SECTIONS: SectionKey[] = ["benefits", "testimonials", "faq", "demo"];
+const ALL_SECTIONS: SectionKey[] = ["benefits", "pricing", "faq", "demo"];
 
 export default function Home() {
   return (

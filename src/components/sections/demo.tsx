@@ -592,7 +592,7 @@ export function DemoSection() {
                           name="telefono"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Teléfono de Contacto (WhatsApp)</FormLabel>
+                              <FormLabel>Nro. de WhatsApp (Para el Asistente Checkin IA)</FormLabel>
                               <div className="flex items-center">
                                 <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-secondary text-muted-foreground text-sm">
                                   +54
