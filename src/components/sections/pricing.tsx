@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Check } from "lucide-react";
@@ -6,7 +7,7 @@ import { cn } from "@/lib/utils";
 const plans = [
   {
     name: "Básico",
-    price: "$10/mes",
+    price: "$9.99/mes",
     description: "Para empezar a automatizar la comunicación con tus huéspedes.",
     trial: "Prueba gratis por 30 días",
     features: [
@@ -19,7 +20,7 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "$30/mes",
+    price: "$29.9/mes",
     description: "La solución completa para maximizar tus reservas y eficiencia.",
     trial: null,
     features: [
