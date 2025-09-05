@@ -6,8 +6,9 @@ import { cn } from "@/lib/utils";
 const plans = [
   {
     name: "Básico",
-    price: "Gratis",
+    price: "$10/mes",
     description: "Para empezar a automatizar la comunicación con tus huéspedes.",
+    trial: "Prueba gratis por 30 días",
     features: [
       "Automatización de respuestas a consultas frecuentes.",
       "Información completa y detallada del alojamiento.",
@@ -18,8 +19,9 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "$9.99/mes",
+    price: "$30/mes",
     description: "La solución completa para maximizar tus reservas y eficiencia.",
+    trial: null,
     features: [
       "Todo lo del plan Básico.",
       "Envío de imágenes y videos del alojamiento.",
@@ -48,7 +50,8 @@ export function PricingSection() {
               <CardContent className="flex-grow">
                 <div className="mb-6">
                   <span className="text-4xl font-bold">{plan.price}</span>
-                  {plan.name === "Premium" && <span className="text-muted-foreground">/alojamiento</span>}
+                  {plan.name !== "Básico" && <span className="text-muted-foreground">/alojamiento</span>}
+                  {plan.trial && <p className="text-sm text-primary font-semibold mt-1">{plan.trial}</p>}
                 </div>
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
