@@ -7,26 +7,28 @@ import { cn } from "@/lib/utils";
 const plans = [
   {
     name: "Básico",
-    price: "$4.99/mes",
+    price: "$9.99/mes",
     description: "Para empezar a automatizar la comunicación con tus huéspedes.",
     trial: "Prueba gratis por 30 días",
     features: [
       "Automatización de respuestas a consultas frecuentes.",
       "Información completa y detallada del alojamiento.",
-      "Panel de gestión de alojamientos."
+      "Panel de gestión de alojamientos.",
+      "Soporte técnico 24/7."
     ],
     isFeatured: false,
   },
   {
     name: "Premium",
-    price: "$14.99/mes",
+    price: "$29.9/mes",
     description: "La solución completa para maximizar tus reservas y eficiencia.",
     trial: null,
     features: [
       "Todo lo del plan Básico.",
       "Envío de imágenes y videos del alojamiento.",
       "Gestión de calendario y disponibilidad.",
-      "Sistema de reservas y confirmación de fechas."
+      "Sistema de reservas y confirmación de fechas.",
+      "Soporte técnico 24/7."
     ],
     isFeatured: true,
   },
