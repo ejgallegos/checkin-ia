@@ -13,7 +13,6 @@ const plans = [
     features: [
       "Automatización de respuestas a consultas frecuentes.",
       "Información completa y detallada del alojamiento.",
-      "Conexión con tu número de WhatsApp.",
       "Panel de gestión de alojamientos."
     ],
     isFeatured: false,

@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     question: "¿Hay un período de prueba?",
-    answer: "Sí, ofrecemos una prueba gratuita de 7 días sin compromiso para que puedas experimentar todo el potencial de Checkin IA en tu negocio."
+    answer: "Sí, ofrecemos una prueba gratuita de 30 días sin compromiso para que puedas experimentar todo el potencial de Checkin IA en tu negocio."
   }
 ];
 
