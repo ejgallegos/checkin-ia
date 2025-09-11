@@ -176,7 +176,7 @@ export function DemoSection() {
           precio_noche: values.precio_noche,
           checkin: `${values.checkIn}:00`,
           checkout: `${values.checkOut}:00`,
-          telefono: `+54${values.telefono}`,
+          telefono: `+549${values.telefono}`,
           ubicacion: values.ubicacion,
           descripcion: values.descripcion,
           politica_cancelacion: values.politicaCancelacion,

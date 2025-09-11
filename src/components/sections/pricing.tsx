@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const plans = [
   {
     name: "Básico",
-    price: "$9.99/mes",
+    price: "$4.99/mes",
     description: "Para empezar a automatizar la comunicación con tus huéspedes.",
     trial: "Prueba gratis por 30 días",
     features: [
@@ -20,7 +20,7 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "$29.9/mes",
+    price: "$14.99/mes",
     description: "La solución completa para maximizar tus reservas y eficiencia.",
     trial: null,
     features: [
