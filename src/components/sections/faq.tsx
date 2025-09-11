@@ -15,8 +15,12 @@ const faqs = [
     answer: "Nuestra IA está preparada para comunicarse fluidamente en español, inglés y portugués. Estamos trabajando para añadir más idiomas próximamente."
   },
   {
+    question: "¿Qué número de WhatsApp necesito para el asistente?",
+    answer: "Necesitarás un número de teléfono exclusivo para tu asistente de Checkin IA. No puede ser tu número personal, ya que este se convertirá en el canal de comunicación automatizado con tus huéspedes."
+  },
+  {
     question: "¿Cómo se integra con mi cuenta de WhatsApp?",
-    answer: "La integración es muy sencilla y segura. Simplemente escaneas un código QR desde tu aplicación de WhatsApp Business y la conexión queda establecida."
+    answer: "La integración es muy sencilla y segura. Simplemente escaneas un código QR desde la aplicación de WhatsApp en el teléfono que dedicarás al asistente y la conexión queda establecida."
   },
   {
     question: "¿Qué pasa si la IA no sabe responder una pregunta?",
