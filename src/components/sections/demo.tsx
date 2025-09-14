@@ -223,7 +223,7 @@ export function DemoSection() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': 'evolution_api_69976825'
+                'apikey': process.env.EVOLUTION_API_KEY!
             },
             body: JSON.stringify({
                 instanceName: values.nombreAlojamiento,
@@ -246,7 +246,7 @@ export function DemoSection() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'apikey': 'evolution_api_69976825'
+                    'apikey': process.env.EVOLUTION_API_KEY!
                 },
                 body: JSON.stringify({
                     webhook: {
@@ -673,5 +673,3 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
