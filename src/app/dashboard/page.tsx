@@ -214,7 +214,7 @@ export default function DashboardPage() {
       const apiUrl = `https://evolution.gali.com.ar/instance/connect/${encodedDenominacion}`;
       const response = await fetch(apiUrl, {
           headers: {
-              'apikey': process.env.EVOLUTION_API_KEY!
+              'apikey': 'B6D711FC-2D24-4A34-9541-54256C8733E5'
           }
       });
       const data = await response.json();
