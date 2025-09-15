@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw, Zap } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -296,6 +296,7 @@ export default function DashboardPage() {
              );
              const currentAloId = String(alojamiento.id);
              const hasError = qrError[currentAloId];
+             const isPremium = alojamiento.plan?.id === 2;
 
 
              return (
@@ -503,7 +504,7 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
                
-               {/* QR Code Card */}
+               {isPremium ? (
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>🤖 Conexión con IA</CardTitle>
@@ -542,6 +543,28 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground mt-4">La conexión puede tardar unos segundos en establecerse.</p>
                     </CardContent>
                 </Card>
+                ) : (
+                <Card className="shadow-lg border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
+                    <CardHeader>
+                        <CardTitle>🚀 ¡Pásate a Premium!</CardTitle>
+                        <CardDescription>Actualmente estás en el plan Básico.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col text-center space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Desbloquea el asistente de IA para WhatsApp y todas las funciones avanzadas.
+                        </p>
+                        <ul className="text-sm text-left list-disc list-inside space-y-2">
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5" /> Asistente IA en WhatsApp 24/7</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5" /> Gestión de Disponibilidad</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5" /> Envío de Fotos y Videos</li>
+                        </ul>
+                         <Button size="lg" className="w-full shadow-lg shadow-primary/20">
+                            <Zap className="mr-2" /> ¡Mejorar a Premium Ahora!
+                        </Button>
+                    </CardContent>
+                </Card>
+                )}
+
 
              </div>
              );
