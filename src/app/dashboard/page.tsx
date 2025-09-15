@@ -22,6 +22,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { addDays, format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
 import type { DateRange } from 'react-day-picker';
 
@@ -93,7 +94,10 @@ export default function DashboardPage() {
   const [qrError, setQrError] = useState<{[key: string]: boolean}>({});
 
   // State for the calendar
-  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: undefined,
+    to: undefined,
+  });
 
 
   useEffect(() => {
@@ -563,48 +567,6 @@ export default function DashboardPage() {
                         </Card>
                     )}
 
-                    {alojamiento.plan?.id === 4 && (
-                        <Card className="shadow-lg">
-                            <CardHeader>
-                                <CardTitle>📅 Calendario de Reservas</CardTitle>
-                                <CardDescription>Gestiona las fechas de tus reservas.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col items-center">
-                                <UiCalendar
-                                    mode="multiple"
-                                    min={1}
-                                    selected={selectedDates}
-                                    onSelect={setSelectedDates}
-                                    className="rounded-md border"
-                                    modifiers={{
-                                      reserved: reservedDates,
-                                      pending: pendingDates,
-                                    }}
-                                    modifiersStyles={{
-                                      reserved: { 
-                                        color: 'white',
-                                        backgroundColor: '#ef4444' // red-500
-                                      },
-                                      pending: {
-                                        color: 'black',
-                                        backgroundColor: '#fde047' // yellow-300
-                                      }
-                                    }}
-                                />
-                                <div className="w-full mt-4 space-y-2 text-sm">
-                                  <div className="flex items-center gap-2">
-                                      <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                                      <span>Reservado</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      <div className="w-4 h-4 rounded-full bg-yellow-300"></div>
-                                      <span>Pendiente de Pago</span>
-                                  </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
                     {alojamiento.plan?.id === 2 && (
                         <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
                             <CardHeader>
@@ -627,6 +589,71 @@ export default function DashboardPage() {
                             </CardContent>
                         </Card>
                     )}
+                    
+                    {alojamiento.plan?.id === 4 && (
+                        <Card className="shadow-lg">
+                            <CardHeader>
+                                <CardTitle>📅 Calendario de Reservas</CardTitle>
+                                <CardDescription>Selecciona un rango de fechas para crear una reserva.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col items-center">
+                                <UiCalendar
+                                    mode="range"
+                                    locale={es}
+                                    numberOfMonths={1}
+                                    selected={date}
+                                    onSelect={setDate}
+                                    className="rounded-md border"
+                                    modifiers={{
+                                      reserved: reservedDates,
+                                      pending: pendingDates,
+                                    }}
+                                    modifiersStyles={{
+                                      reserved: { 
+                                        color: 'white',
+                                        backgroundColor: '#ef4444' // red-500
+                                      },
+                                      pending: {
+                                        color: 'black',
+                                        backgroundColor: '#fde047' // yellow-300
+                                      }
+                                    }}
+                                />
+                                <div className="w-full mt-6 space-y-4">
+                                  <div className="text-center p-4 border rounded-lg">
+                                      <p className="text-sm font-medium">
+                                          {date?.from ? (
+                                              date.to ? (
+                                                  <>
+                                                      Desde {format(date.from, "LLL dd, y", { locale: es })} hasta{" "}
+                                                      {format(date.to, "LLL dd, y", { locale: es })}
+                                                  </>
+                                              ) : (
+                                                  <span>Selecciona la fecha de fin.</span>
+                                              )
+                                          ) : (
+                                              <span>Selecciona un rango de fechas.</span>
+                                          )}
+                                      </p>
+                                  </div>
+                                  <Button className="w-full" disabled={!date?.from || !date?.to}>
+                                      Confirmar Reserva
+                                  </Button>
+                                  <div className="flex justify-around items-center text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                                        <span>Reservado</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded-full bg-yellow-300"></div>
+                                        <span>Pendiente</span>
+                                    </div>
+                                  </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                 </div>
              </div>
              );
@@ -636,6 +663,5 @@ export default function DashboardPage() {
       <Footer />
     </div>
   );
-}
 
     
