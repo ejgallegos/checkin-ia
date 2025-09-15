@@ -93,11 +93,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (jwt: string, userData: User, accommodationData: any[]) => {
     const processedAccommodations = accommodationData.map(item => {
         const { id, attributes } = item;
+        const planData = attributes.plan?.data;
         return {
             id: id,
             documentId: String(id),
             ...attributes,
-            plan: attributes.plan,
+            plan: planData ? { id: planData.id, ...planData.attributes } : null,
         };
     });
     
