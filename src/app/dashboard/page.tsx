@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw, Zap } from 'lucide-react';
+import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw, Zap, Rocket } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
@@ -502,46 +502,71 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
                
-               {(alojamiento.plan?.id === 2 || alojamiento.plan?.id === 4) && (
-                <Card className="shadow-lg">
-                    <CardHeader>
-                        <CardTitle>🤖 Conexión con IA</CardTitle>
-                        <CardDescription>Activa el asistente virtual para tu WhatsApp.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center text-center">
-                        {qrCodeUrl[currentAloId] ? (
-                          <>
-                            <h4 className="font-semibold mb-2">✨ ¡Conexión Lista!</h4>
-                            <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde la app de WhatsApp para vincular tu número.</p>
-                            <img src={qrCodeUrl[currentAloId]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
-                          </>
-                        ) : hasError ? (
-                            <div className="space-y-4">
-                                <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
-                                <p className="text-destructive font-semibold">Error al generar el QR</p>
+                <div className="flex flex-col gap-8">
+                    {alojamiento.plan?.id === 2 && (
+                        <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Rocket/>
+                                    ¡Pásate a Premium!
+                                </CardTitle>
+                                <CardDescription className="text-primary-foreground/80">Desbloquea todo el potencial de Checkin IA.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <p className="text-sm">Actualmente estás en el plan Básico. Mejora a Premium para obtener:</p>
+                                <ul className="text-sm list-disc list-inside space-y-1">
+                                    <li>Gestión de Calendario y Disponibilidad</li>
+                                    <li>Sistema de Reservas y Pagos</li>
+                                    <li>¡Y mucho más!</li>
+                                </ul>
+                                <Button className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-2">
+                                    ¡Mejorar a Premium Ahora!
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {(alojamiento.plan?.id === 2 || alojamiento.plan?.id === 4) && (
+                        <Card className="shadow-lg">
+                            <CardHeader>
+                                <CardTitle>🤖 Conexión con IA</CardTitle>
+                                <CardDescription>Activa el asistente virtual para tu WhatsApp.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col items-center text-center">
+                                {qrCodeUrl[currentAloId] ? (
+                                <>
+                                    <h4 className="font-semibold mb-2">✨ ¡Conexión Lista!</h4>
+                                    <p className="text-sm text-muted-foreground mb-4">Escanea este código QR desde la app de WhatsApp para vincular tu número.</p>
+                                    <img src={qrCodeUrl[currentAloId]!} alt="Código QR de conexión de WhatsApp" className="w-64 h-64 rounded-lg shadow-md" />
+                                </>
+                                ) : hasError ? (
+                                    <div className="space-y-4">
+                                        <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
+                                        <p className="text-destructive font-semibold">Error al generar el QR</p>
+                                        <Button 
+                                            onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} 
+                                            className="w-full" 
+                                            size="lg" 
+                                            disabled={isGeneratingQR[currentAloId]}
+                                        >
+                                            {isGeneratingQR[currentAloId] ? <Loader className="animate-spin" /> : <><RefreshCw className="mr-2" /> Reintentar</>}
+                                        </Button>
+                                    </div>
+                                ) : (
                                 <Button 
                                     onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} 
                                     className="w-full" 
                                     size="lg" 
                                     disabled={isGeneratingQR[currentAloId]}
                                 >
-                                    {isGeneratingQR[currentAloId] ? <Loader className="animate-spin" /> : <><RefreshCw className="mr-2" /> Reintentar</>}
+                                    {isGeneratingQR[currentAloId] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp </>}
                                 </Button>
-                            </div>
-                        ) : (
-                           <Button 
-                            onClick={() => handleGenerateQR(alojamiento.id, alojamiento.denominacion)} 
-                            className="w-full" 
-                            size="lg" 
-                            disabled={isGeneratingQR[currentAloId]}
-                          >
-                            {isGeneratingQR[currentAloId] ? <Loader className="animate-spin" /> : <> <QrCode className="mr-2"/> Conectar WhatsApp </>}
-                          </Button>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-4">La conexión puede tardar unos segundos en establecerse.</p>
-                    </CardContent>
-                </Card>
-                )}
+                                )}
+                                <p className="text-xs text-muted-foreground mt-4">La conexión puede tardar unos segundos en establecerse.</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
              </div>
              );
             })
@@ -551,5 +576,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
