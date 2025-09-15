@@ -20,11 +20,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Calendar as CalendarIcon } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
 import type { DateRange } from 'react-day-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const serviceIcons: { [key: string]: JSX.Element } = {
@@ -97,6 +97,18 @@ export default function DashboardPage() {
   const [date, setDate] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
+  });
+
+  // State for reservation dialog
+  const [isReservationOpen, setIsReservationOpen] = useState(false);
+  const [isCreatingReservation, setIsCreatingReservation] = useState(false);
+  const [reservationDetails, setReservationDetails] = useState({
+      nombre_cliente: '',
+      email_cliente: '',
+      telefono_cliente: '',
+      cantidad_personas: 1,
+      estado: 'Pendiente',
+      observaciones: '',
   });
 
 
@@ -259,6 +271,75 @@ export default function DashboardPage() {
     } finally {
       setIsGeneratingQR(prev => ({...prev, [String(alojamientoId)]: false}));
     }
+  };
+
+  const handleCreateReservation = async () => {
+      if (!date?.from || !date?.to) {
+          toast({ title: "Error", description: "Fechas de reserva no seleccionadas.", variant: "destructive" });
+          return;
+      }
+
+      setIsCreatingReservation(true);
+
+      const reservationData = {
+          data: {
+              ...reservationDetails,
+              telefono_cliente: Number(reservationDetails.telefono_cliente),
+              fecha_inicio: format(date.from, 'yyyy-MM-dd'),
+              fecha_fin: format(date.to, 'yyyy-MM-dd'),
+          }
+      };
+
+      try {
+          const response = await fetch('https://db.turismovillaunion.gob.ar/api/reservas', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}` 
+              },
+              body: JSON.stringify(reservationData),
+          });
+
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error?.message || 'No se pudo crear la reserva.');
+          }
+
+          toast({
+              title: "¡Reserva Creada!",
+              description: "La reserva ha sido registrada exitosamente.",
+          });
+
+          // Reset form and calendar
+          setIsReservationOpen(false);
+          setReservationDetails({
+              nombre_cliente: '',
+              email_cliente: '',
+              telefono_cliente: '',
+              cantidad_personas: 1,
+              estado: 'Pendiente',
+              observaciones: '',
+          });
+          setDate({ from: undefined, to: undefined });
+          // Here you would ideally refetch the reservations to update the calendar
+          
+      } catch (error) {
+          toast({
+              title: "Error al Crear Reserva",
+              description: (error as Error).message,
+              variant: "destructive",
+          });
+      } finally {
+          setIsCreatingReservation(false);
+      }
+  };
+
+  const handleReservationFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setReservationDetails(prev => ({
+          ...prev,
+          [name]: name === 'cantidad_personas' ? Number(value) : value
+      }));
   };
 
   if (authLoading || !isAuthenticated) {
@@ -636,9 +717,64 @@ export default function DashboardPage() {
                                           )}
                                       </p>
                                   </div>
-                                  <Button className="w-full" disabled={!date?.from || !date?.to}>
-                                      Confirmar Reserva
-                                  </Button>
+
+                                  <Dialog open={isReservationOpen} onOpenChange={setIsReservationOpen}>
+                                      <DialogTrigger asChild>
+                                          <Button className="w-full" disabled={!date?.from || !date?.to}>
+                                              Confirmar Reserva
+                                          </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="sm:max-w-[425px]">
+                                          <DialogHeader>
+                                              <DialogTitle>Nueva Reserva</DialogTitle>
+                                              <DialogDescription>
+                                                  Completa los datos del cliente para confirmar la reserva.
+                                              </DialogDescription>
+                                          </DialogHeader>
+                                          <div className="grid gap-4 py-4">
+                                              <div className="grid grid-cols-4 items-center gap-4">
+                                                  <Label htmlFor="nombre_cliente" className="text-right">Nombre</Label>
+                                                  <Input id="nombre_cliente" name="nombre_cliente" value={reservationDetails.nombre_cliente} onChange={handleReservationFormChange} className="col-span-3" />
+                                              </div>
+                                              <div className="grid grid-cols-4 items-center gap-4">
+                                                  <Label htmlFor="email_cliente" className="text-right">Email</Label>
+                                                  <Input id="email_cliente" name="email_cliente" type="email" value={reservationDetails.email_cliente} onChange={handleReservationFormChange} className="col-span-3" />
+                                              </div>
+                                              <div className="grid grid-cols-4 items-center gap-4">
+                                                  <Label htmlFor="telefono_cliente" className="text-right">Teléfono</Label>
+                                                  <Input id="telefono_cliente" name="telefono_cliente" type="tel" value={reservationDetails.telefono_cliente} onChange={handleReservationFormChange} className="col-span-3" />
+                                              </div>
+                                              <div className="grid grid-cols-4 items-center gap-4">
+                                                  <Label htmlFor="cantidad_personas" className="text-right">Personas</Label>
+                                                  <Input id="cantidad_personas" name="cantidad_personas" type="number" min="1" value={reservationDetails.cantidad_personas} onChange={handleReservationFormChange} className="col-span-3" />
+                                              </div>
+                                              <div className="grid grid-cols-4 items-center gap-4">
+                                                  <Label htmlFor="estado" className="text-right">Estado</Label>
+                                                  <Select name="estado" value={reservationDetails.estado} onValueChange={(value) => setReservationDetails(prev => ({ ...prev, estado: value }))}>
+                                                      <SelectTrigger className="col-span-3">
+                                                          <SelectValue placeholder="Selecciona un estado" />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                          <SelectItem value="Pendiente">Pendiente</SelectItem>
+                                                          <SelectItem value="Confirmada">Confirmada</SelectItem>
+                                                          <SelectItem value="Cancelada">Cancelada</SelectItem>
+                                                      </SelectContent>
+                                                  </Select>
+                                              </div>
+                                              <div className="grid grid-cols-4 items-center gap-4">
+                                                  <Label htmlFor="observaciones" className="text-right">Obs.</Label>
+                                                  <Textarea id="observaciones" name="observaciones" value={reservationDetails.observaciones} onChange={handleReservationFormChange} className="col-span-3" placeholder="Notas adicionales..." />
+                                              </div>
+                                          </div>
+                                          <DialogFooter>
+                                              <Button onClick={handleCreateReservation} disabled={isCreatingReservation}>
+                                                  {isCreatingReservation ? <Loader className="animate-spin" /> : 'Guardar Reserva'}
+                                              </Button>
+                                          </DialogFooter>
+                                      </DialogContent>
+                                  </Dialog>
+
+
                                   <div className="flex justify-around items-center text-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 rounded-full bg-red-500"></div>
@@ -665,3 +801,4 @@ export default function DashboardPage() {
   );
 
     
+
