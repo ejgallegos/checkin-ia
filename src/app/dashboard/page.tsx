@@ -502,7 +502,7 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
                
-               {alojamiento.plan?.id === 2 && (
+               {alojamiento.plan?.id === 3 && (
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>🤖 Conexión con IA</CardTitle>
