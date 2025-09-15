@@ -502,7 +502,7 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
                
-               {alojamiento.plan?.id === 3 && (
+               {alojamiento.plan?.id === 4 && (
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>🤖 Conexión con IA</CardTitle>
@@ -543,7 +543,7 @@ export default function DashboardPage() {
                 </Card>
                 )}
 
-               {alojamiento.plan?.id === 1 && (
+               {alojamiento.plan?.id === 2 && (
                 <Card className="shadow-lg border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
                     <CardHeader>
                         <CardTitle>🚀 ¡Pásate a Premium!</CardTitle>
@@ -575,3 +575,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

@@ -183,7 +183,7 @@ export function DemoSection() {
           metodo_pago: values.metodosPago,
           reglas_casa: values.reglasCasa,
           usuario: user.id,
-          plan: 1,
+          plan: 2,
           Servicios: {
             wifi: values.amenities.wifi,
             cocina: values.amenities.cocina,
@@ -673,3 +673,5 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
