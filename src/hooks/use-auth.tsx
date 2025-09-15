@@ -91,9 +91,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (jwt: string, userData: User, accommodationData: any[]) => {
-    const processedAccommodations = accommodationData.map(item => {
+    const processedAccommodations = accommodationData
+      .filter(item => item && item.attributes) // Ensure item and attributes exist
+      .map(item => {
         const { id, attributes } = item;
+        
         const planData = attributes.plan?.data;
+
         return {
             id: id,
             documentId: String(id),
