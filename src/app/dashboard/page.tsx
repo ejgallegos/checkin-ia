@@ -20,6 +20,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { addDays, format } from 'date-fns';
+import { Calendar as UiCalendar } from '@/components/ui/calendar';
+import type { DateRange } from 'react-day-picker';
 
 
 const serviceIcons: { [key: string]: JSX.Element } = {
@@ -65,6 +69,18 @@ const accommodationTypeIcons: { [key: string]: JSX.Element } = {
     casa: <Home className="w-5 h-5 text-muted-foreground" />,
 };
 
+// Mock data for reservations - we'll connect this to an API later
+const today = new Date();
+const reservedDates = [
+    addDays(today, 3),
+    addDays(today, 4),
+    addDays(today, 5),
+];
+const pendingDates = [
+    addDays(today, 12)
+];
+
+
 export default function DashboardPage() {
   const { user, accommodations, isAuthenticated, isLoading: authLoading, logout, token, login } = useAuth();
   const router = useRouter();
@@ -75,6 +91,9 @@ export default function DashboardPage() {
   const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [qrError, setQrError] = useState<{[key: string]: boolean}>({});
+
+  // State for the calendar
+  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([]);
 
 
   useEffect(() => {
@@ -544,6 +563,48 @@ export default function DashboardPage() {
                         </Card>
                     )}
 
+                    {alojamiento.plan?.id === 4 && (
+                        <Card className="shadow-lg">
+                            <CardHeader>
+                                <CardTitle>📅 Calendario de Reservas</CardTitle>
+                                <CardDescription>Gestiona las fechas de tus reservas.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-col items-center">
+                                <UiCalendar
+                                    mode="multiple"
+                                    min={1}
+                                    selected={selectedDates}
+                                    onSelect={setSelectedDates}
+                                    className="rounded-md border"
+                                    modifiers={{
+                                      reserved: reservedDates,
+                                      pending: pendingDates,
+                                    }}
+                                    modifiersStyles={{
+                                      reserved: { 
+                                        color: 'white',
+                                        backgroundColor: '#ef4444' // red-500
+                                      },
+                                      pending: {
+                                        color: 'black',
+                                        backgroundColor: '#fde047' // yellow-300
+                                      }
+                                    }}
+                                />
+                                <div className="w-full mt-4 space-y-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                                      <span>Reservado</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-4 h-4 rounded-full bg-yellow-300"></div>
+                                      <span>Pendiente de Pago</span>
+                                  </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {alojamiento.plan?.id === 2 && (
                         <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
                             <CardHeader>
@@ -576,3 +637,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
