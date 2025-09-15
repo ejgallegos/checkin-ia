@@ -24,6 +24,11 @@ interface Services {
     mascotas: boolean;
 }
 
+interface Plan {
+    id: number;
+    nombre: string;
+}
+
 export interface Accommodation {
     id: number;
     documentId: string;
@@ -40,6 +45,7 @@ export interface Accommodation {
     metodo_pago: string;
     reglas_casa: string;
     Servicios: Services;
+    plan: Plan | null;
 }
 
 
@@ -49,7 +55,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (jwt: string, userData: User, accommodationData: Accommodation[]) => void;
+  login: (jwt: string, userData: User, accommodationData: any[]) => void;
   logout: () => void;
 }
 
@@ -84,13 +90,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = (jwt: string, userData: User, accommodationData: Accommodation[]) => {
+  const login = (jwt: string, userData: User, accommodationData: any[]) => {
+    const processedAccommodations = accommodationData.map(item => {
+        const { id, attributes } = item;
+        const planData = attributes.plan?.data;
+        return {
+            id: id,
+            documentId: String(id),
+            ...attributes,
+            plan: planData ? { id: planData.id, ...planData.attributes } : null,
+        };
+    });
+    
     localStorage.setItem('token', jwt);
     localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('accommodations', JSON.stringify(accommodationData));
+    localStorage.setItem('accommodations', JSON.stringify(processedAccommodations));
     setToken(jwt);
     setUser(userData);
-    setAccommodations(accommodationData);
+    setAccommodations(processedAccommodations);
     router.push('/dashboard');
   };
 

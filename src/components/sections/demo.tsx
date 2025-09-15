@@ -673,7 +673,3 @@ export function DemoSection() {
     </div>
   );
 }
-
-    
-
-    
