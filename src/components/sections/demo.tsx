@@ -203,7 +203,7 @@ export function DemoSection() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwt}`
+            'Authorization': `Bearer 3634a8e84e160a56bf4bd77299c7545b5476a35534382849096f8bbb033e15b5afab61ae46d3a69576227a24c556735ca3d7c70190d890b2b9631a60886ef6c50df5311c4019095a9b5b64e73884d30ead8f953090711b9abaede2a93c30c418c3f7c29ab93eb414601ec453e9540f6fa9d06eadf26a86d797036b636d692455`
         },
         body: JSON.stringify(accommodationDataForApi)
       });
@@ -673,3 +673,5 @@ export function DemoSection() {
     </div>
   );
 }
+
+    
