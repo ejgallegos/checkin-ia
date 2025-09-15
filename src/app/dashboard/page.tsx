@@ -502,7 +502,7 @@ export default function DashboardPage() {
                  </CardContent>
                </Card>
                
-               {alojamiento.plan?.id === 4 && (
+               {(alojamiento.plan?.id === 2 || alojamiento.plan?.id === 4) && (
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>🤖 Conexión con IA</CardTitle>
@@ -542,30 +542,6 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
                 )}
-
-               {alojamiento.plan?.id === 2 && (
-                <Card className="shadow-lg border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
-                    <CardHeader>
-                        <CardTitle>🚀 ¡Pásate a Premium!</CardTitle>
-                        <CardDescription>Actualmente estás en el plan Básico.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col text-center space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                            Desbloquea el asistente de IA para WhatsApp y todas las funciones avanzadas.
-                        </p>
-                        <ul className="text-sm text-left list-disc list-inside space-y-2">
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5" /> Asistente IA en WhatsApp 24/7</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5" /> Gestión de Disponibilidad</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5" /> Envío de Fotos y Videos</li>
-                        </ul>
-                         <Button size="lg" className="w-full shadow-lg shadow-primary/20">
-                            <Zap className="mr-2" /> ¡Mejorar a Premium Ahora!
-                        </Button>
-                    </CardContent>
-                </Card>
-                )}
-
-
              </div>
              );
             })
