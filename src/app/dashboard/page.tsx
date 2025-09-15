@@ -503,29 +503,6 @@ export default function DashboardPage() {
                </Card>
                
                 <div className="flex flex-col gap-8">
-                    {alojamiento.plan?.id === 2 && (
-                        <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Rocket/>
-                                    ¡Pásate a Premium!
-                                </CardTitle>
-                                <CardDescription className="text-primary-foreground/80">Desbloquea todo el potencial de Checkin IA.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <p className="text-sm">Actualmente estás en el plan Básico. Mejora a Premium para obtener:</p>
-                                <ul className="text-sm list-disc list-inside space-y-1">
-                                    <li>Gestión de Calendario y Disponibilidad</li>
-                                    <li>Sistema de Reservas y Pagos</li>
-                                    <li>¡Y mucho más!</li>
-                                </ul>
-                                <Button className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-2">
-                                    ¡Mejorar a Premium Ahora!
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
-
                     {(alojamiento.plan?.id === 2 || alojamiento.plan?.id === 4) && (
                         <Card className="shadow-lg">
                             <CardHeader>
@@ -563,6 +540,29 @@ export default function DashboardPage() {
                                 </Button>
                                 )}
                                 <p className="text-xs text-muted-foreground mt-4">La conexión puede tardar unos segundos en establecerse.</p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {alojamiento.plan?.id === 2 && (
+                        <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Rocket/>
+                                    ¡Pásate a Premium!
+                                </CardTitle>
+                                <CardDescription className="text-primary-foreground/80">Desbloquea todo el potencial de Checkin IA.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <p className="text-sm">Actualmente estás en el plan Básico. Mejora a Premium para obtener:</p>
+                                <ul className="text-sm list-disc list-inside space-y-1">
+                                    <li>Gestión de Calendario y Disponibilidad</li>
+                                    <li>Sistema de Reservas y Pagos</li>
+                                    <li>¡Y mucho más!</li>
+                                </ul>
+                                <Button className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-2">
+                                    ¡Mejorar a Premium Ahora!
+                                </Button>
                             </CardContent>
                         </Card>
                     )}
