@@ -313,7 +313,9 @@ export default function DashboardPage() {
                   },
                   body: JSON.stringify({
                       data: {
-                          reserva: newReservationDocumentId
+                          reserva: {
+                            connect: [newReservationDocumentId]
+                          }
                       }
                   })
               });
@@ -993,3 +995,5 @@ export default function DashboardPage() {
     
 
     
+
+      
