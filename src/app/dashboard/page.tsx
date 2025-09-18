@@ -532,7 +532,6 @@ export default function DashboardPage() {
 
              const reservedDates = getDatesFromReservations(confirmedReservations);
              const pendingDates = getDatesFromReservations(pendingReservations);
-             const disabledDates = [...reservedDates, ...pendingDates];
 
 
              return (
@@ -821,7 +820,6 @@ export default function DashboardPage() {
                               onSelect={setDate}
                               onDayClick={handleDayClick}
                               className="rounded-md border"
-                              disabled={disabledDates}
                               modifiers={{
                                 reserved: reservedDates,
                                 pending: pendingDates,
