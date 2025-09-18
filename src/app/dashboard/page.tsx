@@ -308,7 +308,7 @@ export default function DashboardPage() {
               throw new Error(errorData.error?.message || 'No se pudo crear la reserva.');
           }
           
-          const newReservationId = responseData.data.id;
+          const newReservationDocumentId = responseData.data.documentId;
 
           // 2. Update the accommodation with the new reservation ID
           try {
@@ -320,7 +320,7 @@ export default function DashboardPage() {
                   },
                   body: JSON.stringify({
                       data: {
-                          reserva: newReservationId
+                          reserva: newReservationDocumentId
                       }
                   })
               });
@@ -834,6 +834,7 @@ export default function DashboardPage() {
   );
 
     
+
 
 
 
