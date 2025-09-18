@@ -20,11 +20,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { addDays, format, eachDayOfInterval, parseISO } from 'date-fns';
+import { addDays, format, eachDayOfInterval, parseISO, isWithinInterval, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
-import type { DateRange } from 'react-day-picker';
+import type { DateRange, DayClickEventHandler } from 'react-day-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 
 const serviceIcons: { [key: string]: JSX.Element } = {
@@ -99,6 +100,8 @@ export default function DashboardPage() {
       estado: 'Pendiente',
       observaciones: '',
   });
+  
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 
 
   useEffect(() => {
@@ -280,7 +283,6 @@ export default function DashboardPage() {
       };
 
       try {
-          // 1. Create the reservation
           const response = await fetch('https://db.turismovillaunion.gob.ar/api/reservas', {
               method: 'POST',
               headers: {
@@ -299,7 +301,6 @@ export default function DashboardPage() {
           
           const newReservationDocumentId = responseData.data.documentId;
 
-          // 2. Update the accommodation with the new reservation ID
           try {
               const updateAccResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${alojamientoId}`, {
                   method: 'PUT',
@@ -355,6 +356,29 @@ export default function DashboardPage() {
           setIsCreatingReservation(false);
       }
   };
+  
+  const handleDayClick: DayClickEventHandler = (day, modifiers, e) => {
+    const allReservations = accommodations.flatMap(a => a.reserva);
+    const clickedDate = startOfDay(day);
+
+    const reservation = allReservations.find(r => {
+        if (!r.fecha_inicio || !r.fecha_fin) return false;
+        try {
+            const start = parseISO(r.fecha_inicio);
+            const end = parseISO(r.fecha_fin);
+            return isWithinInterval(clickedDate, { start, end });
+        } catch {
+            return false;
+        }
+    });
+
+    if (reservation) {
+        setSelectedReservation(reservation);
+    } else {
+        setSelectedReservation(null);
+    }
+  };
+
 
   const handleReservationFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
@@ -717,122 +741,144 @@ export default function DashboardPage() {
                     )}
                     
                     {alojamiento.plan?.id === 4 && (
-                        <Card className="shadow-lg">
-                            <CardHeader>
-                                <CardTitle>📅 Calendario de Reservas</CardTitle>
-                                <CardDescription>Selecciona un rango de fechas para crear una reserva.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col items-center">
-                                <UiCalendar
-                                    mode="range"
-                                    locale={es}
-                                    numberOfMonths={1}
-                                    selected={date}
-                                    onSelect={setDate}
-                                    className="rounded-md border"
-                                    modifiers={{
-                                      reserved: reservedDates,
-                                      pending: pendingDates,
-                                    }}
-                                    modifiersStyles={{
-                                      reserved: { 
-                                        color: 'white',
-                                        backgroundColor: '#ef4444' // red-500
-                                      },
-                                      pending: {
-                                        color: 'black',
-                                        backgroundColor: '#fde047' // yellow-300
-                                      }
-                                    }}
-                                />
-                                <div className="w-full mt-6 space-y-4">
-                                  <div className="text-center p-4 border rounded-lg">
-                                      <p className="text-sm font-medium">
-                                          {date?.from ? (
-                                              date.to ? (
-                                                  <>
-                                                      Desde {format(date.from, "LLL dd, y", { locale: es })} hasta{" "}
-                                                      {format(date.to, "LLL dd, y", { locale: es })}
-                                                  </>
-                                              ) : (
-                                                  <span>Selecciona la fecha de fin.</span>
-                                              )
-                                          ) : (
-                                              <span>Selecciona un rango de fechas.</span>
-                                          )}
-                                      </p>
-                                  </div>
-
-                                  <Dialog open={isReservationOpen} onOpenChange={setIsReservationOpen}>
-                                      <DialogTrigger asChild>
-                                          <Button className="w-full" disabled={!date?.from || !date?.to}>
-                                              Confirmar Reserva
-                                          </Button>
-                                      </DialogTrigger>
-                                      <DialogContent className="sm:max-w-[425px]">
-                                          <DialogHeader>
-                                              <DialogTitle>Nueva Reserva</DialogTitle>
-                                              <DialogDescription>
-                                                  Completa los datos del cliente para confirmar la reserva.
-                                              </DialogDescription>
-                                          </DialogHeader>
-                                          <div className="grid gap-4 py-4">
-                                              <div className="grid grid-cols-4 items-center gap-4">
-                                                  <Label htmlFor="nombre_cliente" className="text-right">Nombre</Label>
-                                                  <Input id="nombre_cliente" name="nombre_cliente" value={reservationDetails.nombre_cliente} onChange={handleReservationFormChange} className="col-span-3" />
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-4">
-                                                  <Label htmlFor="email_cliente" className="text-right">Email</Label>
-                                                  <Input id="email_cliente" name="email_cliente" type="email" value={reservationDetails.email_cliente} onChange={handleReservationFormChange} className="col-span-3" />
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-4">
-                                                  <Label htmlFor="telefono_cliente" className="text-right">Teléfono</Label>
-                                                  <Input id="telefono_cliente" name="telefono_cliente" type="tel" value={reservationDetails.telefono_cliente} onChange={handleReservationFormChange} className="col-span-3" />
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-4">
-                                                  <Label htmlFor="cantidad_personas" className="text-right">Personas</Label>
-                                                  <Input id="cantidad_personas" name="cantidad_personas" type="number" min="1" value={reservationDetails.cantidad_personas} onChange={handleReservationFormChange} className="col-span-3" />
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-4">
-                                                  <Label htmlFor="estado" className="text-right">Estado</Label>
-                                                  <Select name="estado" value={reservationDetails.estado} onValueChange={(value) => setReservationDetails(prev => ({ ...prev, estado: value }))}>
-                                                      <SelectTrigger className="col-span-3">
-                                                          <SelectValue placeholder="Selecciona un estado" />
-                                                      </SelectTrigger>
-                                                      <SelectContent>
-                                                          <SelectItem value="Pendiente">Pendiente</SelectItem>
-                                                          <SelectItem value="Confirmada">Confirmada</SelectItem>
-                                                          <SelectItem value="Cancelada">Cancelada</SelectItem>
-                                                      </SelectContent>
-                                                  </Select>
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-4">
-                                                  <Label htmlFor="observaciones" className="text-right">Obs.</Label>
-                                                  <Textarea id="observaciones" name="observaciones" value={reservationDetails.observaciones} onChange={handleReservationFormChange} className="col-span-3" placeholder="Notas adicionales..." />
-                                              </div>
-                                          </div>
-                                          <DialogFooter>
-                                              <Button onClick={() => handleCreateReservation(alojamiento.documentId)} disabled={isCreatingReservation}>
-                                                  {isCreatingReservation ? <Loader className="animate-spin" /> : 'Guardar Reserva'}
-                                              </Button>
-                                          </DialogFooter>
-                                      </DialogContent>
-                                  </Dialog>
-
-
-                                  <div className="flex justify-around items-center text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                                        <span>Reservado</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full bg-yellow-300"></div>
-                                        <span>Pendiente</span>
-                                    </div>
-                                  </div>
+                      <Card className="shadow-lg">
+                        <CardHeader>
+                          <CardTitle>📅 Calendario y Reservas</CardTitle>
+                          <CardDescription>Gestiona la disponibilidad de tu alojamiento.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                          <div className="flex flex-col items-center">
+                            <UiCalendar
+                              mode="range"
+                              locale={es}
+                              numberOfMonths={1}
+                              selected={date}
+                              onSelect={setDate}
+                              onDayClick={handleDayClick}
+                              className="rounded-md border"
+                              modifiers={{
+                                reserved: reservedDates,
+                                pending: pendingDates,
+                              }}
+                              modifiersStyles={{
+                                reserved: { color: 'white', backgroundColor: '#ef4444' }, // red-500
+                                pending: { color: 'black', backgroundColor: '#fde047' } // yellow-300
+                              }}
+                            />
+                             <div className="w-full mt-4 space-y-2">
+                                <div className="flex justify-around items-center text-sm">
+                                    <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-red-500"></div><span>Reservado</span></div>
+                                    <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-yellow-300"></div><span>Pendiente</span></div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                                <div className="text-center p-4 border rounded-lg bg-background">
+                                    <p className="text-sm font-medium">
+                                        {date?.from ? (date.to ? <>Desde {format(date.from, "LLL dd, y", { locale: es })} hasta {format(date.to, "LLL dd, y", { locale: es })}</> : <span>Selecciona la fecha de fin.</span>) : (<span>Selecciona un rango de fechas para crear una reserva.</span>)}
+                                    </p>
+                                </div>
+
+                                <Dialog open={isReservationOpen} onOpenChange={setIsReservationOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button className="w-full" disabled={!date?.from || !date?.to}>
+                                            Crear Nueva Reserva
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle>Nueva Reserva</DialogTitle>
+                                            <DialogDescription>
+                                                Completa los datos del cliente para confirmar la reserva.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="nombre_cliente" className="text-right">Nombre</Label>
+                                                <Input id="nombre_cliente" name="nombre_cliente" value={reservationDetails.nombre_cliente} onChange={handleReservationFormChange} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="email_cliente" className="text-right">Email</Label>
+                                                <Input id="email_cliente" name="email_cliente" type="email" value={reservationDetails.email_cliente} onChange={handleReservationFormChange} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="telefono_cliente" className="text-right">Teléfono</Label>
+                                                <Input id="telefono_cliente" name="telefono_cliente" type="tel" value={reservationDetails.telefono_cliente} onChange={handleReservationFormChange} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="cantidad_personas" className="text-right">Personas</Label>
+                                                <Input id="cantidad_personas" name="cantidad_personas" type="number" min="1" value={reservationDetails.cantidad_personas} onChange={handleReservationFormChange} className="col-span-3" />
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="estado" className="text-right">Estado</Label>
+                                                <Select name="estado" value={reservationDetails.estado} onValueChange={(value) => setReservationDetails(prev => ({ ...prev, estado: value }))}>
+                                                    <SelectTrigger className="col-span-3">
+                                                        <SelectValue placeholder="Selecciona un estado" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Pendiente">Pendiente</SelectItem>
+                                                        <SelectItem value="Confirmada">Confirmada</SelectItem>
+                                                        <SelectItem value="Cancelada">Cancelada</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                <Label htmlFor="observaciones" className="text-right">Obs.</Label>
+                                                <Textarea id="observaciones" name="observaciones" value={reservationDetails.observaciones} onChange={handleReservationFormChange} className="col-span-3" placeholder="Notas adicionales..." />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button onClick={() => handleCreateReservation(alojamiento.documentId)} disabled={isCreatingReservation}>
+                                                {isCreatingReservation ? <Loader className="animate-spin" /> : 'Guardar Reserva'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                          </div>
+
+                           <Card>
+                              <CardHeader>
+                                <CardTitle>Detalles de la Reserva</CardTitle>
+                                <CardDescription>Haz clic en una fecha ocupada para ver su información.</CardDescription>
+                              </CardHeader>
+                              <CardContent className="space-y-4 text-sm">
+                                {selectedReservation ? (
+                                  <div className="space-y-3 animate-fade-in">
+                                    <div>
+                                      <p className="font-semibold text-primary flex items-center gap-2"><User className="w-4 h-4"/>{selectedReservation.nombre_cliente}</p>
+                                      <p className="text-muted-foreground">{selectedReservation.email_cliente}</p>
+                                      <p className="text-muted-foreground">{selectedReservation.telefono_cliente}</p>
+                                    </div>
+                                    <Separator/>
+                                    <div>
+                                        <Badge variant={selectedReservation.estado === 'Confirmada' ? 'default' : selectedReservation.estado === 'Pendiente' ? 'secondary' : 'destructive'}>
+                                            {selectedReservation.estado}
+                                        </Badge>
+                                        <p className="mt-2">
+                                            <span className="font-semibold">Desde:</span> {format(parseISO(selectedReservation.fecha_inicio), "PPP", { locale: es })}
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold">Hasta:</span> {format(parseISO(selectedReservation.fecha_fin), "PPP", { locale: es })}
+                                        </p>
+                                    </div>
+                                    {selectedReservation.observaciones && (
+                                        <>
+                                            <Separator/>
+                                            <div>
+                                                <p className="font-semibold">Observaciones:</p>
+                                                <p className="text-muted-foreground">{selectedReservation.observaciones}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full py-8">
+                                    <Info className="w-8 h-8 mb-2"/>
+                                    <p>Selecciona una fecha reservada o pendiente para ver los detalles.</p>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                        </CardContent>
+                      </Card>
                     )}
 
                 </div>
@@ -852,3 +898,6 @@ export default function DashboardPage() {
 
 
 
+
+
+    

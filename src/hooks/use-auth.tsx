@@ -106,14 +106,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (jwt: string, userData: User, accommodationData: any[]) => {
     const processedAccommodations = accommodationData.map(item => {
-        const { documentId, ...rest } = item;
-        // Make sure `reserva` is always an array
-        const reservations = Array.isArray(item.reserva) ? item.reserva : (item.reserva ? [item.reserva] : []);
+        const { documentId, reserva, ...rest } = item;
+        const reservations = Array.isArray(reserva) ? reserva : (reserva ? [reserva] : []);
 
         return {
             ...rest,
             id: item.id,
-            documentId: documentId, // Uses the original documentId
+            documentId: documentId,
             reserva: reservations
         };
     });
@@ -151,3 +150,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
