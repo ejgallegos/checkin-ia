@@ -29,6 +29,19 @@ interface Plan {
     nombre: string;
 }
 
+export interface Reservation {
+    id: number;
+    documentId: string;
+    nombre_cliente: string;
+    email_cliente: string;
+    telefono_cliente: string;
+    fecha_inicio: string;
+    fecha_fin: string;
+    cantidad_personas: number;
+    estado: 'Pendiente' | 'Confirmada' | 'Cancelada';
+    observaciones: string;
+}
+
 export interface Accommodation {
     id: number;
     documentId: string;
@@ -46,6 +59,7 @@ export interface Accommodation {
     reglas_casa: string;
     Servicios: Services;
     plan: Plan | null;
+    reserva: Reservation[];
 }
 
 
@@ -93,10 +107,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (jwt: string, userData: User, accommodationData: any[]) => {
     const processedAccommodations = accommodationData.map(item => {
         const { documentId, ...rest } = item;
+        // Make sure `reserva` is always an array
+        const reservations = Array.isArray(item.reserva) ? item.reserva : (item.reserva ? [item.reserva] : []);
+
         return {
             ...rest,
             id: item.id,
             documentId: documentId, // Uses the original documentId
+            reserva: reservations
         };
     });
     

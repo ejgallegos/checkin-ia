@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import type { Accommodation } from '@/hooks/use-auth';
+import type { Accommodation, Reservation } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { addDays, format } from 'date-fns';
+import { addDays, format, eachDayOfInterval, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
 import type { DateRange } from 'react-day-picker';
@@ -69,17 +69,6 @@ const accommodationTypeIcons: { [key: string]: JSX.Element } = {
     cabaña: <Home className="w-5 h-5 text-muted-foreground" />,
     casa: <Home className="w-5 h-5 text-muted-foreground" />,
 };
-
-// Mock data for reservations - we'll connect this to an API later
-const today = new Date();
-const reservedDates = [
-    addDays(today, 3),
-    addDays(today, 4),
-    addDays(today, 5),
-];
-const pendingDates = [
-    addDays(today, 12)
-];
 
 
 export default function DashboardPage() {
@@ -284,7 +273,7 @@ export default function DashboardPage() {
       const reservationData = {
           data: {
               ...reservationDetails,
-              telefono_cliente: Number(reservationDetails.telefono_cliente),
+              telefono_cliente: String(reservationDetails.telefono_cliente),
               fecha_inicio: format(date.from, 'yyyy-MM-dd'),
               fecha_fin: format(date.to, 'yyyy-MM-dd'),
           }
@@ -433,6 +422,29 @@ export default function DashboardPage() {
              );
              const currentAloId = String(alojamiento.id);
              const hasError = qrError[currentAloId];
+
+             const confirmedReservations = alojamiento.reserva?.filter(r => r.estado === 'Confirmada') || [];
+             const pendingReservations = alojamiento.reserva?.filter(r => r.estado === 'Pendiente') || [];
+
+             const getDatesFromReservations = (reservations: Reservation[]) => {
+                 return reservations.flatMap(r => {
+                     if (r.fecha_inicio && r.fecha_fin) {
+                         try {
+                             return eachDayOfInterval({
+                                 start: parseISO(r.fecha_inicio),
+                                 end: parseISO(r.fecha_fin)
+                             });
+                         } catch (e) {
+                             console.error("Invalid date format in reservation:", r);
+                             return [];
+                         }
+                     }
+                     return [];
+                 });
+             };
+
+             const reservedDates = getDatesFromReservations(confirmedReservations);
+             const pendingDates = getDatesFromReservations(pendingReservations);
 
              return (
              <div key={alojamiento.documentId} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
@@ -834,6 +846,7 @@ export default function DashboardPage() {
   );
 
     
+
 
 
 
