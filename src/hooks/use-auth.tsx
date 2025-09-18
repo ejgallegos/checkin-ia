@@ -93,8 +93,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (jwt: string, userData: User, accommodationData: any[]) => {
     const processedAccommodations = accommodationData.map(item => ({
         ...item,
-        id: item.id,
-        documentId: String(item.id),
     }));
     
     localStorage.setItem('token', jwt);
