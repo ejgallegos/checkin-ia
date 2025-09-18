@@ -9,7 +9,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw, Zap, Rocket } from 'lucide-react';
@@ -82,7 +82,7 @@ export default function DashboardPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState<{[key: string]: string | null}>({});
   const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
+  const [isProcessingReservation, setIsProcessingReservation] = useState(false);
   const [qrError, setQrError] = useState<{[key: string]: boolean}>({});
 
   // State for the calendar
@@ -302,7 +302,7 @@ export default function DashboardPage() {
           }
           
           const newReservationDocumentId = responseData.data.documentId;
-          const newReservation = responseData.data;
+          const newReservation = { ...responseData.data.attributes, documentId: newReservationDocumentId, id: responseData.data.id };
 
           try {
               const updateAccResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${alojamientoDocumentId}`, {
@@ -373,9 +373,9 @@ export default function DashboardPage() {
       }
   };
   
-    const handleCancelReservation = async (reservation: Reservation) => {
+    const handleUpdateReservationStatus = async (reservation: Reservation, newStatus: 'Confirmada' | 'Cancelada') => {
         if (!reservation) return;
-        setIsCancelling(true);
+        setIsProcessingReservation(true);
         try {
             const response = await fetch(`https://db.turismovillaunion.gob.ar/api/reservas/${reservation.documentId}`, {
                 method: 'PUT',
@@ -385,40 +385,48 @@ export default function DashboardPage() {
                 },
                 body: JSON.stringify({
                     data: {
-                        estado: 'Cancelada',
+                        estado: newStatus,
                     },
                 }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error?.message || 'No se pudo cancelar la reserva.');
+                throw new Error(errorData.error?.message || `No se pudo ${newStatus === 'Cancelada' ? 'cancelar' : 'confirmar'} la reserva.`);
             }
 
             toast({
-                title: '¡Reserva Cancelada!',
-                description: 'La reserva ha sido marcada como cancelada.',
+                title: `¡Reserva ${newStatus}!`,
+                description: `La reserva ha sido marcada como ${newStatus.toLowerCase()}.`,
             });
 
             // Update local state
             const updatedAccommodations = accommodations.map(acc => {
                 const updatedReservas = acc.reserva.map(r => 
-                    r.documentId === reservation.documentId ? { ...r, estado: 'Cancelada' } : r
+                    r.documentId === reservation.documentId ? { ...r, estado: newStatus } : r
                 );
-                return { ...acc, reserva: updatedReservas.filter(r => r.estado !== 'Cancelada') };
+                return { ...acc, reserva: updatedReservas };
             });
 
             login(token!, user!, updatedAccommodations);
-            setSelectedReservation(null);
+            
+            // If the currently selected reservation is the one we just updated, update it or clear it if cancelled
+            if (selectedReservation?.documentId === reservation.documentId) {
+                if (newStatus === 'Cancelada') {
+                    setSelectedReservation(null);
+                } else {
+                    setSelectedReservation(prev => prev ? { ...prev, estado: newStatus } : null);
+                }
+            }
 
         } catch (error) {
             toast({
-                title: 'Error al Cancelar',
+                title: 'Error al Actualizar Reserva',
                 description: (error as Error).message,
                 variant: 'destructive',
             });
         } finally {
-            setIsCancelling(false);
+            setIsProcessingReservation(false);
         }
     };
   
@@ -783,31 +791,8 @@ export default function DashboardPage() {
                         </Card>
                     )}
 
-                    {alojamiento.plan?.id === 2 && (
-                        <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Rocket/>
-                                    ¡Pásate a Premium!
-                                </CardTitle>
-                                <CardDescription className="text-primary-foreground/80">Desbloquea todo el potencial de Checkin IA.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <p className="text-sm">Actualmente estás en el plan Básico. Mejora a Premium para obtener:</p>
-                                <ul className="text-sm list-disc list-inside space-y-1">
-                                    <li>Gestión de Calendario y Disponibilidad</li>
-                                    <li>Sistema de Reservas y Pagos</li>
-                                    <li>¡Y mucho más!</li>
-                                </ul>
-                                <Button className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-2">
-                                    ¡Mejorar a Premium Ahora!
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
-                    
                     {alojamiento.plan?.id === 4 && (
-                      <Card className="shadow-lg">
+                      <Card className="shadow-lg lg:col-span-1">
                         <CardHeader>
                           <CardTitle>📅 Calendario y Reservas</CardTitle>
                           <CardDescription>Gestiona la disponibilidad de tu alojamiento.</CardDescription>
@@ -934,12 +919,35 @@ export default function DashboardPage() {
                                             </div>
                                         </>
                                     )}
-                                    {(selectedReservation.estado === 'Confirmada' || selectedReservation.estado === 'Pendiente') && (
-                                      <>
-                                        <Separator />
+                                    <Separator />
+                                    <div className="flex flex-col space-y-2">
+                                      {selectedReservation.estado === 'Pendiente' && (
+                                          <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="default" className="w-full" disabled={isProcessingReservation}>
+                                                    Confirmar Reserva
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>¿Confirmar Reserva?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        La reserva se marcará como "Confirmada" y las fechas quedarán bloqueadas.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Volver</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleUpdateReservationStatus(selectedReservation, 'Confirmada')} disabled={isProcessingReservation}>
+                                                        {isProcessingReservation ? <Loader className="animate-spin" /> : 'Sí, confirmar'}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                          </AlertDialog>
+                                      )}
+                                      {(selectedReservation.estado === 'Confirmada' || selectedReservation.estado === 'Pendiente') && (
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
-                                                <Button variant="destructive" className="w-full" disabled={isCancelling}>
+                                                <Button variant="destructive" className="w-full" disabled={isProcessingReservation}>
                                                     Cancelar Reserva
                                                 </Button>
                                             </AlertDialogTrigger>
@@ -947,19 +955,19 @@ export default function DashboardPage() {
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        Esta acción no se puede deshacer. La reserva será marcada como "Cancelada" y las fechas se liberarán.
+                                                        Esta acción no se puede deshacer. La reserva será marcada como "Cancelada".
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Volver</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleCancelReservation(selectedReservation)} disabled={isCancelling}>
-                                                        {isCancelling ? <Loader className="animate-spin" /> : 'Sí, cancelar reserva'}
+                                                    <AlertDialogAction onClick={() => handleUpdateReservationStatus(selectedReservation, 'Cancelada')} disabled={isProcessingReservation}>
+                                                        {isProcessingReservation ? <Loader className="animate-spin" /> : 'Sí, cancelar reserva'}
                                                     </AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
-                                      </>
-                                    )}
+                                      )}
+                                    </div>
                                   </div>
                                 ) : (
                                   <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full py-8">
@@ -972,6 +980,30 @@ export default function DashboardPage() {
                         </CardContent>
                       </Card>
                     )}
+                    
+                     {alojamiento.plan?.id === 2 && (
+                        <Card className="shadow-lg bg-gradient-to-br from-primary/90 to-primary text-primary-foreground">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Rocket/>
+                                    ¡Pásate a Premium!
+                                </CardTitle>
+                                <CardDescription className="text-primary-foreground/80">Desbloquea todo el potencial de Checkin IA.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <p className="text-sm">Actualmente estás en el plan Básico. Mejora a Premium para obtener:</p>
+                                <ul className="text-sm list-disc list-inside space-y-1">
+                                    <li>Gestión de Calendario y Disponibilidad</li>
+                                    <li>Sistema de Reservas y Pagos</li>
+                                    <li>¡Y mucho más!</li>
+                                </ul>
+                                <Button className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 mt-2">
+                                    ¡Mejorar a Premium Ahora!
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
+
 
                 </div>
              </div>
@@ -997,3 +1029,5 @@ export default function DashboardPage() {
     
 
       
+
+    
