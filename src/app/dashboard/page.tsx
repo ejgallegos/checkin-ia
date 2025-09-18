@@ -10,6 +10,7 @@ import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Loader, LogOut, QrCode, Wifi, Car, Utensils, Snowflake, Sun, Tv, BedDouble, Bath, PawPrint, Clock, Info, Home, Building, Check, Pencil, Map, User, PartyPopper, Bed, Calendar, DollarSign, HomeIcon, Hotel, Sailboat, Users, MapPin, Phone, CreditCard, AlertTriangle, RefreshCw, Zap, Rocket } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,6 +82,7 @@ export default function DashboardPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState<{[key: string]: string | null}>({});
   const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [qrError, setQrError] = useState<{[key: string]: boolean}>({});
 
   // State for the calendar
@@ -265,7 +267,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCreateReservation = async (alojamientoId: string) => {
+  const handleCreateReservation = async (alojamientoDocumentId: string) => {
       if (!date?.from || !date?.to) {
           toast({ title: "Error", description: "Fechas de reserva no seleccionadas.", variant: "destructive" });
           return;
@@ -300,9 +302,10 @@ export default function DashboardPage() {
           }
           
           const newReservationDocumentId = responseData.data.documentId;
+          const newReservation = responseData.data;
 
           try {
-              const updateAccResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${alojamientoId}`, {
+              const updateAccResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${alojamientoDocumentId}`, {
                   method: 'PUT',
                   headers: {
                       'Content-Type': 'application/json',
@@ -324,6 +327,18 @@ export default function DashboardPage() {
                   description: "La reserva ha sido registrada y asociada al alojamiento.",
               });
 
+              // Update state locally
+              const updatedAccommodations = accommodations.map(acc => {
+                if (acc.documentId === alojamientoDocumentId) {
+                  return {
+                    ...acc,
+                    reserva: [...acc.reserva, newReservation]
+                  };
+                }
+                return acc;
+              });
+              login(token!, user!, updatedAccommodations);
+
           } catch (updateError) {
               toast({
                   title: "Advertencia",
@@ -344,7 +359,6 @@ export default function DashboardPage() {
               observaciones: '',
           });
           setDate({ from: undefined, to: undefined });
-          // Here you would ideally refetch the reservations to update the calendar
           
       } catch (error) {
           toast({
@@ -356,6 +370,55 @@ export default function DashboardPage() {
           setIsCreatingReservation(false);
       }
   };
+  
+    const handleCancelReservation = async (reservation: Reservation) => {
+        if (!reservation) return;
+        setIsCancelling(true);
+        try {
+            const response = await fetch(`https://db.turismovillaunion.gob.ar/api/reservas/${reservation.documentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    data: {
+                        estado: 'Cancelada',
+                    },
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'No se pudo cancelar la reserva.');
+            }
+
+            toast({
+                title: '¡Reserva Cancelada!',
+                description: 'La reserva ha sido marcada como cancelada.',
+            });
+
+            // Update local state
+            const updatedAccommodations = accommodations.map(acc => {
+                const updatedReservas = acc.reserva.map(r => 
+                    r.documentId === reservation.documentId ? { ...r, estado: 'Cancelada' } : r
+                );
+                return { ...acc, reserva: updatedReservas.filter(r => r.estado !== 'Cancelada') };
+            });
+
+            login(token!, user!, updatedAccommodations);
+            setSelectedReservation(null);
+
+        } catch (error) {
+            toast({
+                title: 'Error al Cancelar',
+                description: (error as Error).message,
+                variant: 'destructive',
+            });
+        } finally {
+            setIsCancelling(false);
+        }
+    };
   
   const handleDayClick: DayClickEventHandler = (day, modifiers, e) => {
     const allReservations = accommodations.flatMap(a => a.reserva);
@@ -469,6 +532,8 @@ export default function DashboardPage() {
 
              const reservedDates = getDatesFromReservations(confirmedReservations);
              const pendingDates = getDatesFromReservations(pendingReservations);
+             const disabledDates = [...reservedDates, ...pendingDates];
+
 
              return (
              <div key={alojamiento.documentId} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
@@ -756,6 +821,7 @@ export default function DashboardPage() {
                               onSelect={setDate}
                               onDayClick={handleDayClick}
                               className="rounded-md border"
+                              disabled={disabledDates}
                               modifiers={{
                                 reserved: reservedDates,
                                 pending: pendingDates,
@@ -868,6 +934,32 @@ export default function DashboardPage() {
                                             </div>
                                         </>
                                     )}
+                                    {(selectedReservation.estado === 'Confirmada' || selectedReservation.estado === 'Pendiente') && (
+                                      <>
+                                        <Separator />
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive" className="w-full" disabled={isCancelling}>
+                                                    Cancelar Reserva
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Esta acción no se puede deshacer. La reserva será marcada como "Cancelada" y las fechas se liberarán.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Volver</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleCancelReservation(selectedReservation)} disabled={isCancelling}>
+                                                        {isCancelling ? <Loader className="animate-spin" /> : 'Sí, cancelar reserva'}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                      </>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-full py-8">
@@ -899,5 +991,7 @@ export default function DashboardPage() {
 
 
 
+
+    
 
     
