@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { addDays, format, eachDayOfInterval, parseISO, isWithinInterval, startOfDay } from 'date-fns';
+import { addDays, format, eachDayOfInterval, parseISO, isWithinInterval, startOfDay, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
 import type { DateRange, DayClickEventHandler } from 'react-day-picker';
@@ -265,8 +265,8 @@ export default function DashboardPage() {
   };
 
   const handleCreateReservation = async (alojamientoDocumentId: string) => {
-      if (!date?.from || !date?.to) {
-          toast({ title: "Error", description: "Fechas de reserva no seleccionadas.", variant: "destructive" });
+      if (!date?.from || !date?.to || isSameDay(date.from, date.to)) {
+          toast({ title: "Error", description: "Fechas de reserva no válidas. Debe seleccionar al menos 2 días.", variant: "destructive" });
           return;
       }
 
@@ -329,9 +329,11 @@ export default function DashboardPage() {
               // Update state locally
               const updatedAccommodations = accommodations.map(acc => {
                 if (acc.documentId === alojamientoDocumentId) {
+                  // Ensure reserva is always an array
+                  const existingReservations = Array.isArray(acc.reserva) ? acc.reserva : [];
                   return {
                     ...acc,
-                    reserva: [...acc.reserva, newReservation]
+                    reserva: [...existingReservations, newReservation]
                   };
                 }
                 return acc;
@@ -455,7 +457,13 @@ export default function DashboardPage() {
           setDate({ from: day, to: undefined });
       } else {
           // Finish the selection
-          setDate({ from: date.from, to: day });
+          const newRange = { from: date.from, to: day };
+          if (newRange.from && newRange.to && newRange.from > newRange.to) {
+             // if user selected end date before start date, swap them
+             setDate({ from: newRange.to, to: newRange.from });
+          } else {
+             setDate(newRange);
+          }
       }
   };
 
@@ -490,6 +498,18 @@ export default function DashboardPage() {
             <Footer/>
         </div>
     );
+  }
+
+  const reservationButtonDisabled = !date?.from || !date?.to || isSameDay(date.from, date.to);
+  let dateInfoText = "Selecciona un rango de fechas para crear una reserva.";
+  if (date?.from && !date.to) {
+      dateInfoText = "Selecciona la fecha de fin.";
+  } else if (date?.from && date.to) {
+      if (isSameDay(date.from, date.to)) {
+          dateInfoText = "La reserva debe ser de al menos 2 días.";
+      } else {
+          dateInfoText = `Desde ${format(date.from, "LLL dd, y", { locale: es })} hasta ${format(date.to, "LLL dd, y", { locale: es })}`;
+      }
   }
 
   return (
@@ -527,7 +547,7 @@ export default function DashboardPage() {
              const currentAloId = String(alojamiento.id);
              const hasError = qrError[currentAloId];
 
-             const activeReservations = alojamiento.reserva?.filter(r => r.estado !== 'Cancelada') || [];
+             const activeReservations = (Array.isArray(alojamiento.reserva) ? alojamiento.reserva : []).filter(r => r.estado !== 'Cancelada') || [];
              const confirmedReservations = activeReservations.filter(r => r.estado === 'Confirmada');
              const pendingReservations = activeReservations.filter(r => r.estado === 'Pendiente');
 
@@ -831,13 +851,13 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="text-center p-4 border rounded-lg bg-background">
                                     <p className="text-sm font-medium">
-                                        {date?.from ? (date.to ? <>Desde {format(date.from, "LLL dd, y", { locale: es })} hasta {format(date.to, "LLL dd, y", { locale: es })}</> : <span>Selecciona la fecha de fin.</span>) : (<span>Selecciona un rango de fechas para crear una reserva.</span>)}
+                                      {dateInfoText}
                                     </p>
                                 </div>
 
                                 <Dialog open={isReservationOpen} onOpenChange={setIsReservationOpen}>
                                     <DialogTrigger asChild>
-                                        <Button className="w-full" disabled={!date?.from || !date?.to} onClick={() => setIsReservationOpen(true)}>
+                                        <Button className="w-full" disabled={reservationButtonDisabled} onClick={() => setIsReservationOpen(true)}>
                                             Crear Nueva Reserva
                                         </Button>
                                     </DialogTrigger>
@@ -1043,5 +1063,7 @@ export default function DashboardPage() {
     
 
     
+
+      
 
       

@@ -106,15 +106,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (jwt: string, userData: User, accommodationData: any[]) => {
     const processedAccommodations = accommodationData.map(item => {
-        const { documentId, reserva, ...rest } = item;
-        const reservations = Array.isArray(reserva) ? reserva : (reserva ? [reserva] : []);
+      // Ensure 'reserva' is always an array, even if it's missing or not an array.
+      const reservas = Array.isArray(item.reserva) ? item.reserva : (item.reserva ? [item.reserva] : []);
 
-        return {
-            ...rest,
-            id: item.id,
-            documentId: documentId,
-            reserva: reservations
-        };
+      return {
+          ...item,
+          id: item.id,
+          documentId: item.documentId,
+          reserva: reservas.map((r: any) => ({ ...r, documentId: r.documentId || r.id.toString() }))
+      };
     });
     
     localStorage.setItem('token', jwt);
@@ -152,3 +152,5 @@ export const useAuth = () => {
 };
 
     
+
+      
