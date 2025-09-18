@@ -428,7 +428,7 @@ export default function DashboardPage() {
     };
   
   const handleDayClick: DayClickEventHandler = (day, modifiers) => {
-      const allReservations = accommodations.flatMap(a => a.reserva);
+      const allReservations = accommodations.flatMap(a => a.reserva).filter(r => r.estado !== 'Cancelada');
       const clickedDate = startOfDay(day);
 
       const reservationOnDate = allReservations.find(r => {
