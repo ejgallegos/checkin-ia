@@ -273,7 +273,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCreateReservation = async () => {
+  const handleCreateReservation = async (alojamientoId: string) => {
       if (!date?.from || !date?.to) {
           toast({ title: "Error", description: "Fechas de reserva no seleccionadas.", variant: "destructive" });
           return;
@@ -291,6 +291,7 @@ export default function DashboardPage() {
       };
 
       try {
+          // 1. Create the reservation
           const response = await fetch('https://db.turismovillaunion.gob.ar/api/reservas', {
               method: 'POST',
               headers: {
@@ -300,15 +301,47 @@ export default function DashboardPage() {
               body: JSON.stringify(reservationData),
           });
 
+          const responseData = await response.json();
+
           if (!response.ok) {
-              const errorData = await response.json();
+              const errorData = responseData;
               throw new Error(errorData.error?.message || 'No se pudo crear la reserva.');
           }
+          
+          const newReservationId = responseData.data.id;
 
-          toast({
-              title: "¡Reserva Creada!",
-              description: "La reserva ha sido registrada exitosamente.",
-          });
+          // 2. Update the accommodation with the new reservation ID
+          try {
+              const updateAccResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${alojamientoId}`, {
+                  method: 'PUT',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                      data: {
+                          reserva: newReservationId
+                      }
+                  })
+              });
+
+              if (!updateAccResponse.ok) {
+                  throw new Error('La reserva se creó pero no se pudo asociar al alojamiento.');
+              }
+              
+              toast({
+                  title: "¡Reserva Creada y Vinculada!",
+                  description: "La reserva ha sido registrada y asociada al alojamiento.",
+              });
+
+          } catch (updateError) {
+              toast({
+                  title: "Advertencia",
+                  description: (updateError as Error).message,
+                  variant: "destructive",
+              });
+          }
+
 
           // Reset form and calendar
           setIsReservationOpen(false);
@@ -767,7 +800,7 @@ export default function DashboardPage() {
                                               </div>
                                           </div>
                                           <DialogFooter>
-                                              <Button onClick={handleCreateReservation} disabled={isCreatingReservation}>
+                                              <Button onClick={() => handleCreateReservation(alojamiento.documentId)} disabled={isCreatingReservation}>
                                                   {isCreatingReservation ? <Loader className="animate-spin" /> : 'Guardar Reserva'}
                                               </Button>
                                           </DialogFooter>
@@ -801,5 +834,6 @@ export default function DashboardPage() {
   );
 
     
+
 
 
