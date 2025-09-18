@@ -527,8 +527,9 @@ export default function DashboardPage() {
              const currentAloId = String(alojamiento.id);
              const hasError = qrError[currentAloId];
 
-             const confirmedReservations = alojamiento.reserva?.filter(r => r.estado === 'Confirmada') || [];
-             const pendingReservations = alojamiento.reserva?.filter(r => r.estado === 'Pendiente') || [];
+             const activeReservations = alojamiento.reserva?.filter(r => r.estado !== 'Cancelada') || [];
+             const confirmedReservations = activeReservations.filter(r => r.estado === 'Confirmada');
+             const pendingReservations = activeReservations.filter(r => r.estado === 'Pendiente');
 
              const getDatesFromReservations = (reservations: Reservation[]) => {
                  return reservations.flatMap(r => {
@@ -813,6 +814,7 @@ export default function DashboardPage() {
                               selected={date}
                               onDayClick={handleDayClick}
                               className="rounded-md border"
+                              disabled={{ before: new Date() }}
                               modifiers={{
                                 reserved: reservedDates,
                                 pending: pendingDates,
@@ -1041,3 +1043,5 @@ export default function DashboardPage() {
     
 
     
+
+      
