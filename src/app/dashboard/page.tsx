@@ -86,10 +86,7 @@ export default function DashboardPage() {
   const [qrError, setQrError] = useState<{[key: string]: boolean}>({});
 
   // State for the calendar
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: undefined,
-    to: undefined,
-  });
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
 
   // State for reservation dialog
   const [isReservationOpen, setIsReservationOpen] = useState(false);
@@ -302,7 +299,7 @@ export default function DashboardPage() {
           }
           
           const newReservationDocumentId = responseData.data.documentId;
-          const newReservation = { ...responseData.data.attributes, documentId: newReservationDocumentId, id: responseData.data.id };
+          const newReservation: Reservation = { ...responseData.data.attributes, documentId: newReservationDocumentId, id: responseData.data.id };
 
           try {
               const updateAccResponse = await fetch(`https://db.turismovillaunion.gob.ar/api/alojamientos/${alojamientoDocumentId}`, {
@@ -360,7 +357,7 @@ export default function DashboardPage() {
               estado: 'Pendiente',
               observaciones: '',
           });
-          setDate({ from: undefined, to: undefined });
+          setDate(undefined);
           
       } catch (error) {
           toast({
@@ -430,26 +427,36 @@ export default function DashboardPage() {
         }
     };
   
-  const handleDayClick: DayClickEventHandler = (day, modifiers, e) => {
-    const allReservations = accommodations.flatMap(a => a.reserva);
-    const clickedDate = startOfDay(day);
+  const handleDayClick: DayClickEventHandler = (day, modifiers) => {
+      const allReservations = accommodations.flatMap(a => a.reserva);
+      const clickedDate = startOfDay(day);
 
-    const reservation = allReservations.find(r => {
-        if (!r.fecha_inicio || !r.fecha_fin) return false;
-        try {
-            const start = parseISO(r.fecha_inicio);
-            const end = parseISO(r.fecha_fin);
-            return isWithinInterval(clickedDate, { start, end });
-        } catch {
-            return false;
-        }
-    });
+      const reservationOnDate = allReservations.find(r => {
+          if (!r.fecha_inicio || !r.fecha_fin) return false;
+          try {
+              const start = parseISO(r.fecha_inicio);
+              const end = parseISO(r.fecha_fin);
+              return isWithinInterval(clickedDate, { start, end });
+          } catch {
+              return false;
+          }
+      });
 
-    if (reservation) {
-        setSelectedReservation(reservation);
-    } else {
-        setSelectedReservation(null);
-    }
+      if (reservationOnDate) {
+          setSelectedReservation(reservationOnDate);
+          setDate(undefined); // Clear any range selection
+          return;
+      }
+
+      // Logic for selecting a new range on free dates
+      setSelectedReservation(null);
+      if (!date?.from || date.to) {
+          // Start a new selection
+          setDate({ from: day, to: undefined });
+      } else {
+          // Finish the selection
+          setDate({ from: date.from, to: day });
+      }
   };
 
 
@@ -804,7 +811,6 @@ export default function DashboardPage() {
                               locale={es}
                               numberOfMonths={1}
                               selected={date}
-                              onSelect={setDate}
                               onDayClick={handleDayClick}
                               className="rounded-md border"
                               modifiers={{
@@ -829,7 +835,7 @@ export default function DashboardPage() {
 
                                 <Dialog open={isReservationOpen} onOpenChange={setIsReservationOpen}>
                                     <DialogTrigger asChild>
-                                        <Button className="w-full" disabled={!date?.from || !date?.to}>
+                                        <Button className="w-full" disabled={!date?.from || !date?.to} onClick={() => setIsReservationOpen(true)}>
                                             Crear Nueva Reserva
                                         </Button>
                                     </DialogTrigger>
@@ -1029,6 +1035,8 @@ export default function DashboardPage() {
     
 
       
+
+    
 
     
 
